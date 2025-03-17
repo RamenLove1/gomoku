@@ -99,6 +99,7 @@
             margin-top: 20px;
             display: flex;
             justify-content: center;
+            gap: 10px;
         }
         button {
             padding: 10px 20px;
@@ -123,17 +124,35 @@
             padding: 10px;
             border-top: 1px solid #ddd;
         }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+        }
     </style>
 </head>
 <body>
     <h1>五目並べ</h1>
     <div class="game-container">
         <div class="status" id="status">黒の番です</div>
+        <div class="score-board">
+            <div class="score">黒: <span id="score-black">0</span></div>
+            <div class="score">白: <span id="score-white">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
         <div class="board-container">
             <div class="board" id="board"></div>
         </div>
         <div class="controls">
             <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
         </div>
         <div class="disclaimer">
             <p>このゲームは娯楽目的のみで提供されています</p>
@@ -147,10 +166,19 @@
             const board = document.getElementById('board');
             const status = document.getElementById('status');
             const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreDraw = document.getElementById('score-draw');
             
             let gameBoard = [];
             let currentPlayer = 'black';
             let gameActive = true;
+            let scores = {
+                black: 0,
+                white: 0,
+                draw: 0
+            };
             
             // ゲームボードの初期化
             function initializeBoard() {
@@ -186,12 +214,16 @@
                 if (checkWin(row, col)) {
                     gameActive = false;
                     status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の勝ちです！`;
+                    scores[currentPlayer]++;
+                    updateScoreBoard();
                     return;
                 }
                 
                 if (checkDraw()) {
                     gameActive = false;
                     status.textContent = '引き分けです！';
+                    scores.draw++;
+                    updateScoreBoard();
                     return;
                 }
                 
@@ -260,8 +292,22 @@
                 status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
             }
             
-            // リセットボタンのイベント
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreBlack.textContent = scores.black;
+                scoreWhite.textContent = scores.white;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // リセットボタンのイベント（現在のゲームをリセット）
             resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント（スコアもリセット）
+            newGameButton.addEventListener('click', () => {
+                scores = { black: 0, white: 0, draw: 0 };
+                updateScoreBoard();
+                initializeBoard();
+            });
             
             // 初期化
             initializeBoard();
