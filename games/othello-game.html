@@ -322,12 +322,12 @@
             function flipDiscs(row, col, player) {
                 const opponent = player === 'black' ? 'white' : 'black';
                 const flippedDiscs = [];
-                
+    
                 for (const [dr, dc] of directions) {
                     let r = row + dr;
                     let c = col + dc;
                     const discsToFlip = [];
-                    
+        
                     while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
                         if (gameBoard[r][c] === null) break;
                         if (gameBoard[r][c] === opponent) {
@@ -338,24 +338,27 @@
                         } else {
                             break;
                         }
-                        
+            
                         r += dr;
                         c += dc;
                     }
                 }
-                
+    
                 for (const [r, c] of flippedDiscs) {
                     gameBoard[r][c] = player;
                     const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
                     
-                    // クラスを切り替える前にremoveを確実に行う
-                    cell.classList.remove('black', 'white');
-                    cell.classList.add(player, 'flipped');
-                    
-                    // アニメーション終了後にflippedクラスを削除
-                    setTimeout(() => {
-                        cell.classList.remove('flipped');
-                    }, 300);
+                    // ここがアニメーションの問題箇所
+                    // 一旦相手の色だけ残して、アニメーション中は両方のクラスを持たないようにする
+                    if (cell.classList.contains(opponent)) {
+                        cell.classList.add('flipped');
+            
+                        // アニメーション完了後に色を切り替える
+                        setTimeout(() => {
+                            cell.classList.remove(opponent, 'flipped');
+                            cell.classList.add(player);
+                        }, 150); // 回転アニメーションの半分の時間で色を切り替え
+                    }
                 }
                 
                 return flippedDiscs.length > 0;
