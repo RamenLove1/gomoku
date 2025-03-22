@@ -106,11 +106,71 @@
         }
         .board {
             display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
             gap: 10px;
             padding: 10px;
-            margin: 0 auto;
+        }
+        /* スマホ対応のメディアクエリを改善 */
+        @media (max-width: 600px) {
+            .board {
+                grid-gap: 5px;
+                padding: 5px;
+            }
+            /* 難易度に応じてカードサイズを調整 */
+            .board.easy {
+                grid-template-columns: repeat(4, 70px);
+                grid-template-rows: repeat(4, 70px);
+            }
+            .board.medium {
+                grid-template-columns: repeat(6, 48px);
+                grid-template-rows: repeat(6, 48px);
+            }
+            .board.hard {
+                grid-template-columns: repeat(8, 35px);
+                grid-template-rows: repeat(8, 35px);
+            }
+            /* カードサイズを難易度に応じて調整（大きめに変更） */
+            .easy .card {
+                width: 70px;
+                height: 70px;
+                font-size: 30px;
+            }
+            .medium .card {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+            .hard .card {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+        }
+        /* さらに小さい画面用 */
+        @media (max-width: 370px) {
+            .board.medium {
+                grid-template-columns: repeat(6, 44px);
+                grid-template-rows: repeat(6, 44px);
+            }
+            .board.hard {
+                grid-template-columns: repeat(8, 32px);
+                grid-template-rows: repeat(8, 32px);
+            }
+            .medium .card {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            .hard .card {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
         }
         .card {
+            width: 80px;
+            height: 80px;
             background-color: #4682B4;
             border-radius: 5px;
             display: flex;
@@ -120,10 +180,10 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s, background-color 0.3s;
             position: relative;
+            font-size: 30px;
             color: transparent;
             user-select: none;
             perspective: 1000px;
-            aspect-ratio: 1;
         }
         .card.flipped {
             transform: rotateY(180deg);
@@ -191,50 +251,6 @@
             margin-top: 15px;
             margin-bottom: 5px;
             font-weight: bold;
-        }
-        
-        /* レスポンシブ対応の強化 */
-        @media (max-width: 768px) {
-            .card {
-                font-size: 24px;
-            }
-        }
-        
-        @media (max-width: 600px) {
-            .card {
-                font-size: 20px;
-            }
-            .player-score {
-                min-width: auto;
-                flex: 1;
-                padding: 8px;
-                font-size: 14px;
-            }
-            .status {
-                font-size: 16px;
-            }
-            .controls {
-                flex-direction: column;
-                width: 80%;
-            }
-            button {
-                width: 100%;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .card {
-                font-size: 16px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-        }
-        
-        @media (max-width: 350px) {
-            .card {
-                font-size: 14px;
-            }
         }
     </style>
 </head>
@@ -385,12 +401,21 @@
             
             // ボードの初期化
             function initializeBoard() {
+                // ボードの難易度クラスをリセット
+                board.classList.remove('easy', 'medium', 'hard');
+                board.classList.add(difficulty);
+                
+                // デスクトップ用のグリッドサイズ設定
+                const isMobile = window.matchMedia('(max-width: 600px)').matches;
+                if (!isMobile) {
+                    board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                    board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                }
+                // モバイル用の設定はCSSのメディアクエリで処理
+                
                 // ボードをクリア
                 board.innerHTML = '';
                 flippedCards = [];
-                
-                // 画面サイズに応じてカードサイズを調整
-                const boardSize = adjustBoardSize();
                 
                 // カードを準備
                 const totalCards = gridSize * gridSize;
@@ -407,34 +432,6 @@
                 }
                 
                 cards = document.querySelectorAll('.card');
-            }
-            
-            // ボードサイズを画面に合わせて調整
-            function adjustBoardSize() {
-                // ビューポートの幅を取得
-                const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-                const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-                
-                // ボードコンテナの幅を取得（パディングなどを考慮）
-                const containerWidth = document.querySelector('.board-container').clientWidth - 20;
-                
-                // 利用可能なスペースを計算（画面の高さの60%程度を最大にする）
-                const maxBoardHeight = viewportHeight * 0.6;
-                
-                // カードサイズを計算（ギャップを考慮）
-                let cardSize = Math.min(
-                    (containerWidth - (gridSize - 1) * 10) / gridSize,  // 幅に基づくサイズ
-                    (maxBoardHeight - (gridSize - 1) * 10) / gridSize   // 高さに基づくサイズ
-                );
-                
-                // 最低サイズを設定
-                cardSize = Math.max(cardSize, 30);
-                
-                // グリッドのサイズを設定
-                board.style.gridTemplateColumns = `repeat(${gridSize}, ${cardSize}px)`;
-                board.style.gridTemplateRows = `repeat(${gridSize}, ${cardSize}px)`;
-                
-                return cardSize;
             }
             
             // カードをシャッフルして取得
@@ -532,17 +529,13 @@
             function updateScoreBoard() {
                 scoreBoard.innerHTML = '';
                 
-                // プレイヤー数に応じてスコアボードのレイアウトを調整
-                const scoreClass = numberOfPlayers > 6 ? 'small-score' : '';
-                
                 for (let i = 0; i < numberOfPlayers; i++) {
                     const playerScore = document.createElement('div');
                     playerScore.classList.add('player-score');
-                    if (scoreClass) playerScore.classList.add(scoreClass);
                     if (i === currentPlayerIndex && gameActive) {
                         playerScore.classList.add('player-turn');
                     }
-                    playerScore.textContent = `P${i + 1}: ${scores[i]}`;
+                    playerScore.textContent = `プレイヤー${i + 1}: ${scores[i]}`;
                     scoreBoard.appendChild(playerScore);
                 }
             }
@@ -557,10 +550,17 @@
             // リセットボタンのイベント
             resetButton.addEventListener('click', initializeGame);
             
-            // ウィンドウリサイズ時のボードサイズ調整
+            // ウィンドウリサイズ時の処理
             window.addEventListener('resize', () => {
-                if (!gameScreen.classList.contains('hidden')) {
-                    adjustBoardSize();
+                // 難易度に応じたボードのクラスは維持されるので
+                // 画面サイズが変わった時は再初期化するだけで良い
+                if (board.innerHTML !== '') { // ゲームが開始されている場合のみ
+                    // ボードの設定を更新
+                    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+                    if (!isMobile) {
+                        board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                        board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                    }
                 }
             });
         });
