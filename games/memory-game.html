@@ -111,15 +111,39 @@
             gap: 10px;
             padding: 10px;
         }
+        /* スマホ対応のメディアクエリを改善 */
         @media (max-width: 600px) {
             .board {
-                grid-template-columns: repeat(6, 50px);
-                grid-template-rows: repeat(6, 50px);
+                grid-gap: 5px;
             }
-            .card {
-                width: 50px !important;
-                height: 50px !important;
-                font-size: 20px !important;
+            /* 難易度に応じてグリッドとカードサイズを調整 */
+            .board.easy {
+                grid-template-columns: repeat(4, 60px);
+                grid-template-rows: repeat(4, 60px);
+            }
+            .board.medium {
+                grid-template-columns: repeat(6, 40px);
+                grid-template-rows: repeat(6, 40px);
+            }
+            .board.hard {
+                grid-template-columns: repeat(8, 30px);
+                grid-template-rows: repeat(8, 30px);
+            }
+            /* カードサイズを難易度に応じて調整 */
+            .easy .card {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            .medium .card {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            .hard .card {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
             }
         }
         .card {
@@ -355,16 +379,17 @@
             
             // ボードの初期化
             function initializeBoard() {
-                // グリッドサイズに合わせてCSSを調整
-                board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
-                board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                // ボードの難易度クラスをリセット
+                board.classList.remove('easy', 'medium', 'hard');
+                board.classList.add(difficulty);
                 
-                // レスポンシブ対応
-                const mediaQuery = window.matchMedia('(max-width: 600px)');
-                if (mediaQuery.matches) {
-                    board.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
-                    board.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+                // デスクトップ用のグリッドサイズ設定
+                const isMobile = window.matchMedia('(max-width: 600px)').matches;
+                if (!isMobile) {
+                    board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                    board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
                 }
+                // モバイル用の設定はCSSのメディアクエリで処理
                 
                 // ボードをクリア
                 board.innerHTML = '';
@@ -503,15 +528,17 @@
             // リセットボタンのイベント
             resetButton.addEventListener('click', initializeGame);
             
-            // メディアクエリのリスナー追加
+            // ウィンドウリサイズ時の処理
             window.addEventListener('resize', () => {
-                const mediaQuery = window.matchMedia('(max-width: 600px)');
-                if (mediaQuery.matches) {
-                    board.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
-                    board.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
-                } else {
-                    board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
-                    board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                // 難易度に応じたボードのクラスは維持されるので
+                // 画面サイズが変わった時は再初期化するだけで良い
+                if (board.innerHTML !== '') { // ゲームが開始されている場合のみ
+                    // ボードの設定を更新
+                    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+                    if (!isMobile) {
+                        board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                        board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                    }
                 }
             });
         });
