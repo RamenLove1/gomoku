@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神経衰弱</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .setup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .game-options {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .option-group {
+            margin-bottom: 15px;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .option-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .option-button {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .option-button.selected {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .start-button {
+            padding: 12px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        .start-button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 10px;
+            padding: 10px;
+        }
+        @media (max-width: 600px) {
+            .board {
+                grid-template-columns: repeat(6, 50px);
+                grid-template-rows: repeat(6, 50px);
+            }
+            .card {
+                width: 50px !important;
+                height: 50px !important;
+                font-size: 20px !important;
+            }
+        }
+        .card {
+            width: 80px;
+            height: 80px;
+            background-color: #4682B4;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, background-color 0.3s;
+            position: relative;
+            font-size: 30px;
+            color: transparent;
+            user-select: none;
+            perspective: 1000px;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+            background-color: white;
+            color: black;
+        }
+        .card.matched {
+            background-color: #ddd;
+            cursor: default;
+            color: #666;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .score-board {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .player-score {
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+            margin: 5px;
+            min-width: 100px;
+            text-align: center;
+        }
+        .player-turn {
+            border: 2px solid #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .hidden {
+            display: none;
+        }
+        .difficulty-label {
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>神経衰弱</h1>
+    
+    <!-- ゲーム設定画面 -->
+    <div class="setup-container" id="setup-screen">
+        <h2>ゲーム設定</h2>
+        <div class="game-options">
+            <div class="option-group">
+                <span class="option-label">プレイヤー数:</span>
+                <div class="option-buttons" id="player-options">
+                    <div class="option-button selected" data-players="2">2人</div>
+                    <div class="option-button" data-players="3">3人</div>
+                    <div class="option-button" data-players="4">4人</div>
+                    <div class="option-button" data-players="5">5人</div>
+                    <div class="option-button" data-players="6">6人</div>
+                    <div class="option-button" data-players="7">7人</div>
+                    <div class="option-button" data-players="8">8人</div>
+                </div>
+            </div>
+            
+            <div class="option-group">
+                <span class="option-label">難易度:</span>
+                <div class="option-buttons" id="difficulty-options">
+                    <div class="option-button selected" data-difficulty="easy">簡単 (4x4)</div>
+                    <div class="option-button" data-difficulty="medium">普通 (6x6)</div>
+                    <div class="option-button" data-difficulty="hard">難しい (8x8)</div>
+                </div>
+            </div>
+        </div>
+        <button class="start-button" id="start-game">ゲーム開始</button>
+    </div>
+    
+    <!-- ゲーム画面 -->
+    <div class="game-container hidden" id="game-screen">
+        <div class="status" id="status">プレイヤー1の番です</div>
+        <div class="score-board" id="score-board">
+            <!-- スコアはJSで動的に生成 -->
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="settings-button">設定に戻る</button>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>このページはAIによって生成されたものです</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 要素の取得
+            const setupScreen = document.getElementById('setup-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const playerOptions = document.querySelectorAll('#player-options .option-button');
+            const difficultyOptions = document.querySelectorAll('#difficulty-options .option-button');
+            const startGameButton = document.getElementById('start-game');
+            const settingsButton = document.getElementById('settings-button');
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const scoreBoard = document.getElementById('score-board');
+            
+            // ゲーム設定
+            let numberOfPlayers = 2; // デフォルトは2人プレイ
+            let difficulty = 'easy'; // デフォルトは簡単
+            let gridSize = 4; // 4x4
+            let cards = [];
+            let flippedCards = [];
+            let currentPlayerIndex = 0;
+            let scores = [];
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            let canFlip = true;
+            let gameActive = true;
+            
+            // 絵文字の配列
+            const emojis = [
+                '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼',
+                '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔',
+                '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺',
+                '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐢'
+            ];
+            
+            // プレイヤー数の選択イベント
+            playerOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    playerOptions.forEach(btn => btn.classList.remove('selected'));
+                    option.classList.add('selected');
+                    numberOfPlayers = parseInt(option.dataset.players);
+                });
+            });
+            
+            // 難易度の選択イベント
+            difficultyOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    difficultyOptions.forEach(btn => btn.classList.remove('selected'));
+                    option.classList.add('selected');
+                    difficulty = option.dataset.difficulty;
+                    
+                    if (difficulty === 'easy') {
+                        gridSize = 4;
+                    } else if (difficulty === 'medium') {
+                        gridSize = 6;
+                    } else {
+                        gridSize = 8;
+                    }
+                });
+            });
+            
+            // ゲーム開始ボタン
+            startGameButton.addEventListener('click', () => {
+                setupScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                initializeGame();
+            });
+            
+            // 設定に戻るボタン
+            settingsButton.addEventListener('click', () => {
+                gameScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+            });
+            
+            // ゲームの初期化
+            function initializeGame() {
+                // スコア初期化
+                scores = Array(numberOfPlayers).fill(0);
+                currentPlayerIndex = 0;
+                matchedPairs = 0;
+                totalPairs = (gridSize * gridSize) / 2;
+                canFlip = true;
+                gameActive = true;
+                
+                // スコアボードの更新
+                updateScoreBoard();
+                
+                // ボードの初期化
+                initializeBoard();
+                
+                // ステータスの更新
+                updateStatus();
+            }
+            
+            // ボードの初期化
+            function initializeBoard() {
+                // グリッドサイズに合わせてCSSを調整
+                board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                
+                // レスポンシブ対応
+                const mediaQuery = window.matchMedia('(max-width: 600px)');
+                if (mediaQuery.matches) {
+                    board.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
+                    board.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+                }
+                
+                // ボードをクリア
+                board.innerHTML = '';
+                flippedCards = [];
+                
+                // カードを準備
+                const totalCards = gridSize * gridSize;
+                const shuffledEmojis = getShuffledCards(totalCards);
+                
+                // カードを配置
+                for (let i = 0; i < totalCards; i++) {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.dataset.value = shuffledEmojis[i];
+                    card.textContent = shuffledEmojis[i];
+                    card.addEventListener('click', () => flipCard(card));
+                    board.appendChild(card);
+                }
+                
+                cards = document.querySelectorAll('.card');
+            }
+            
+            // カードをシャッフルして取得
+            function getShuffledCards(totalCards) {
+                // 必要なカードペアの数
+                const pairs = totalCards / 2;
+                
+                // 使用する絵文字を選択
+                const selectedEmojis = emojis.slice(0, pairs);
+                
+                // ペアを作成
+                const cardValues = [...selectedEmojis, ...selectedEmojis];
+                
+                // シャッフル
+                for (let i = cardValues.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cardValues[i], cardValues[j]] = [cardValues[j], cardValues[i]];
+                }
+                
+                return cardValues;
+            }
+            
+            // カードをめくる
+            function flipCard(card) {
+                // めくれない場合は何もしない
+                if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
+                    return;
+                }
+                
+                // カードをめくる
+                card.classList.add('flipped');
+                flippedCards.push(card);
+                
+                // 2枚めくられた場合
+                if (flippedCards.length === 2) {
+                    canFlip = false;
+                    checkMatch();
+                }
+            }
+            
+            // カードのマッチングを確認
+            function checkMatch() {
+                const [card1, card2] = flippedCards;
+                
+                // タイムアウトを設定してカードの確認時間を作る
+                setTimeout(() => {
+                    if (card1.dataset.value === card2.dataset.value) {
+                        // マッチした場合
+                        card1.classList.add('matched');
+                        card2.classList.add('matched');
+                        scores[currentPlayerIndex]++;
+                        matchedPairs++;
+                        
+                        // ゲーム終了判定
+                        if (matchedPairs === totalPairs) {
+                            endGame();
+                        }
+                    } else {
+                        // マッチしなかった場合
+                        card1.classList.remove('flipped');
+                        card2.classList.remove('flipped');
+                        // プレイヤーを交代
+                        currentPlayerIndex = (currentPlayerIndex + 1) % numberOfPlayers;
+                    }
+                    
+                    // スコアとステータスを更新
+                    updateScoreBoard();
+                    updateStatus();
+                    
+                    // カードをリセット
+                    flippedCards = [];
+                    canFlip = true;
+                }, 1000);
+            }
+            
+            // ゲーム終了処理
+            function endGame() {
+                gameActive = false;
+                
+                // 勝者を判定
+                const maxScore = Math.max(...scores);
+                const winners = scores
+                    .map((score, index) => ({ score, index }))
+                    .filter(item => item.score === maxScore)
+                    .map(item => item.index + 1);
+                
+                if (winners.length === 1) {
+                    status.textContent = `ゲーム終了！ プレイヤー${winners[0]}の勝ちです！`;
+                } else {
+                    status.textContent = `ゲーム終了！ プレイヤー${winners.join('、')}の引き分けです！`;
+                }
+            }
+            
+            // スコアボードの更新
+            function updateScoreBoard() {
+                scoreBoard.innerHTML = '';
+                
+                for (let i = 0; i < numberOfPlayers; i++) {
+                    const playerScore = document.createElement('div');
+                    playerScore.classList.add('player-score');
+                    if (i === currentPlayerIndex && gameActive) {
+                        playerScore.classList.add('player-turn');
+                    }
+                    playerScore.textContent = `プレイヤー${i + 1}: ${scores[i]}`;
+                    scoreBoard.appendChild(playerScore);
+                }
+            }
+            
+            // ステータスの更新
+            function updateStatus() {
+                if (gameActive) {
+                    status.textContent = `プレイヤー${currentPlayerIndex + 1}の番です`;
+                }
+            }
+            
+            // リセットボタンのイベント
+            resetButton.addEventListener('click', initializeGame);
+            
+            // メディアクエリのリスナー追加
+            window.addEventListener('resize', () => {
+                const mediaQuery = window.matchMedia('(max-width: 600px)');
+                if (mediaQuery.matches) {
+                    board.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
+                    board.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+                } else {
+                    board.style.gridTemplateColumns = `repeat(${gridSize}, 80px)`;
+                    board.style.gridTemplateRows = `repeat(${gridSize}, 80px)`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
