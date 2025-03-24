@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レーザーオセロ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 0;
+            background-color: #1E8449;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 500px) {
+            .board {
+                grid-template-columns: repeat(8, 35px);
+                grid-template-rows: repeat(8, 35px);
+            }
+            .cell {
+                width: 35px !important;
+                height: 35px !important;
+            }
+            .cell::before {
+                width: 30px !important;
+                height: 30px !important;
+            }
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            box-sizing: border-box;
+            border: 1px solid #186A3B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell.valid-move::after {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .cell.laser-path {
+            background-color: rgba(255, 255, 0, 0.2);
+        }
+        .cell::before {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.3s;
+        }
+        .cell.black::before {
+            background-color: black;
+            opacity: 1;
+        }
+        .cell.white::before {
+            background-color: white;
+            opacity: 1;
+        }
+        .cell.flipped::before {
+            transform: rotateY(180deg);
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+        .disc-count {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .disc {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .disc-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .black-icon {
+            background-color: black;
+        }
+        .white-icon {
+            background-color: white;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>レーザーオセロ</h1>
+    <div class="game-container">
+        <div class="status" id="status">黒の番です</div>
+        <div class="disc-count">
+            <div class="disc">
+                <div class="disc-icon black-icon"></div>
+                <span id="black-count">2</span>
+            </div>
+            <div class="disc">
+                <div class="disc-icon white-icon"></div>
+                <span id="white-count">2</span>
+            </div>
+        </div>
+        <div class="score-board">
+            <div class="score">黒: <span id="score-black">0</span></div>
+            <div class="score">白: <span id="score-white">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>レーザーオセロ - オセロの特別ルールバージョン</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardSize = 8;
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreDraw = document.getElementById('score-draw');
+            const blackCount = document.getElementById('black-count');
+            const whiteCount = document.getElementById('white-count');
+            
+            let gameBoard = [];
+            let currentPlayer = 'black';
+            let gameActive = true;
+            let scores = {
+                black: 0,
+                white: 0,
+                draw: 0
+            };
+            
+            // 方向の定義 (8方向)
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            // ゲームボードの初期化
+            function initializeBoard() {
+                board.innerHTML = '';
+                gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                
+                // 初期配置
+                gameBoard[3][3] = 'white';
+                gameBoard[3][4] = 'black';
+                gameBoard[4][3] = 'black';
+                gameBoard[4][4] = 'white';
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        
+                        // セルクリックのイベントハンドラー
+                        cell.addEventListener('click', function() {
+                            // データ属性から行と列を取得
+                            const row = parseInt(this.dataset.row);
+                            const col = parseInt(this.dataset.col);
+                            handleCellClick(row, col);
+                        });
+                        
+                        board.appendChild(cell);
+                        
+                        // 初期配置の石を表示
+                        if (gameBoard[i][j]) {
+                            cell.classList.add(gameBoard[i][j]);
+                        }
+                    }
+                }
+                
+                currentPlayer = 'black';
+                gameActive = true;
+                updateBoard();
+                updateStatus();
+            }
+            
+            // 有効な手を取得
+            function getValidMoves(player) {
+                const validMoves = [];
+                
+                for (let row = 0; row < boardSize; row++) {
+                    for (let col = 0; col < boardSize; col++) {
+                        if (gameBoard[row][col] !== null) continue;
+                        
+                        if (isValidMove(row, col, player)) {
+                            validMoves.push([row, col]);
+                        }
+                    }
+                }
+                
+                return validMoves;
+            }
+            
+            // 有効な手かどうかをチェック
+            function isValidMove(row, col, player) {
+                if (gameBoard[row][col] !== null) return false;
+                
+                const opponent = player === 'black' ? 'white' : 'black';
+                
+                for (const [dr, dc] of directions) {
+                    let r = row + dr;
+                    let c = col + dc;
+                    let foundOpponent = false;
+                    
+                    while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                        if (gameBoard[r][c] === null) break;
+                        if (gameBoard[r][c] === opponent) {
+                            foundOpponent = true;
+                        } else if (gameBoard[r][c] === player && foundOpponent) {
+                            return true;
+                        } else {
+                            break;
+                        }
+                        
+                        r += dr;
+                        c += dc;
+                    }
+                }
+                
+                return false;
+            }
+            
+            // レーザーオセロ用の石を返す処理
+            function flipDiscs(row, col, player) {
+                const opponent = player === 'black' ? 'white' : 'black';
+                const flippedPaths = [];
+    
+                for (const [dr, dc] of directions) {
+                    let r = row + dr;
+                    let c = col + dc;
+                    let foundOpponent = false;
+                    let foundPlayer = false;
+                    let firstOpponentR = -1;
+                    let firstOpponentC = -1;
+        
+                    // まず相手の石を見つける
+                    while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                        if (gameBoard[r][c] === null) break;
+                        if (gameBoard[r][c] === opponent) {
+                            if (!foundOpponent) {
+                                firstOpponentR = r;
+                                firstOpponentC = c;
+                            }
+                            foundOpponent = true;
+                        } else if (gameBoard[r][c] === player && foundOpponent) {
+                            foundPlayer = true;
+                            break;
+                        } else {
+                            break;
+                        }
+            
+                        r += dr;
+                        c += dc;
+                    }
+                    
+                    // 相手の石が見つかり、その先に自分の石があった場合
+                    if (foundOpponent && foundPlayer) {
+                        const path = [];
+                        
+                        // その方向の全てのセルを自分の色に変更（レーザーモード）
+                        // 最初に見つけた相手の石から、盤面の端まで全てを自分の色にする
+                        r = firstOpponentR;
+                        c = firstOpponentC;
+                        
+                        while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                            if (gameBoard[r][c] !== player) {
+                                gameBoard[r][c] = player;
+                                path.push([r, c]);
+                            }
+                            // レーザーモードでは自分の石があっても止めない
+                            r += dr;
+                            c += dc;
+                        }
+                        
+                        flippedPaths.push(path);
+                    }
+                }
+                
+                // アニメーション表示
+                for (const path of flippedPaths) {
+                    for (const [r, c] of path) {
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        
+                        // アニメーション効果
+                        if (cell.classList.contains(opponent)) {
+                            cell.classList.add('flipped');
+                
+                            // アニメーション完了後に色を切り替える
+                            setTimeout(() => {
+                                cell.classList.remove(opponent, 'flipped');
+                                cell.classList.add(player);
+                            }, 150);
+                        } else if (!cell.classList.contains(player)) {
+                            // 空のセルだった場合
+                            cell.classList.add('laser-path');
+                            
+                            // アニメーション効果
+                            setTimeout(() => {
+                                cell.classList.remove('laser-path');
+                                cell.classList.add(player);
+                            }, 150);
+                        }
+                    }
+                }
+                
+                return flippedPaths.length > 0;
+            }
+            
+            // セルクリック時の処理
+            function handleCellClick(row, col) {
+                if (!gameActive || !isValidMove(row, col, currentPlayer)) {
+                    return;
+                }
+                
+                // 盤面の状態を更新
+                gameBoard[row][col] = currentPlayer;
+                
+                // DOM更新
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.remove('valid-move');
+                cell.classList.add(currentPlayer);
+                
+                // 相手の石を裏返す（レーザーモード）
+                flipDiscs(row, col, currentPlayer);
+                
+                // 次のターンの準備
+                checkGameStatus();
+            }
+            
+            // ゲームの状態をチェックし次のプレイヤーに移行
+            function checkGameStatus() {
+                // ゲーム終了チェック
+                if (isGameOver()) {
+                    endGame();
+                    return;
+                }
+                
+                // プレイヤー交代
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                
+                // 有効な手があるかチェック
+                const validMoves = getValidMoves(currentPlayer);
+                if (validMoves.length === 0) {
+                    // パスの処理
+                    const nextPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                    status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}に有効な手がないため、パスします`;
+                    
+                    // 次のプレイヤーに
+                    currentPlayer = nextPlayer;
+                    
+                    // 次のプレイヤーも有効な手がなければゲーム終了
+                    if (getValidMoves(currentPlayer).length === 0) {
+                        endGame();
+                        return;
+                    }
+                    
+                    // 少し待ってからステータスを更新
+                    setTimeout(() => {
+                        updateStatus();
+                        updateBoard();
+                    }, 1000);
+                } else {
+                    updateStatus();
+                    updateBoard();
+                }
+            }
+            
+            // ゲーム終了処理
+            function endGame() {
+                gameActive = false;
+                const blackDiscs = countDiscs('black');
+                const whiteDiscs = countDiscs('white');
+                
+                // ゲーム終了時には有効な手の表示を消す
+                clearValidMoves();
+                
+                if (blackDiscs > whiteDiscs) {
+                    status.textContent = `黒の勝ちです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.black++;
+                } else if (whiteDiscs > blackDiscs) {
+                    status.textContent = `白の勝ちです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.white++;
+                } else {
+                    status.textContent = `引き分けです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.draw++;
+                }
+                
+                updateScoreBoard();
+            }
+            
+            // 有効な手の表示をクリア
+            function clearValidMoves() {
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach(cell => {
+                    cell.classList.remove('valid-move');
+                });
+            }
+            
+            // 盤面の状態を更新
+            function updateBoard() {
+                // ゲームがアクティブでない場合、valid-moveを表示しない
+                if (!gameActive) {
+                    clearValidMoves();
+                    return;
+                }
+                
+                // すべての石を正しく表示
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                        cell.classList.remove('black', 'white', 'valid-move', 'laser-path');
+                        
+                        if (gameBoard[i][j]) {
+                            cell.classList.add(gameBoard[i][j]);
+                        }
+                    }
+                }
+                
+                // 現在のプレイヤーの有効な手を表示（ゲームがアクティブな場合のみ）
+                if (gameActive) {
+                    const validMoves = getValidMoves(currentPlayer);
+                    for (const [row, col] of validMoves) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        cell.classList.add('valid-move');
+                    }
+                }
+                
+                // 石の数を更新
+                updateDiscCount();
+            }
+            
+            // 石の数を数える
+            function countDiscs(player) {
+                let count = 0;
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === player) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+            
+            // 石の数を更新
+            function updateDiscCount() {
+                blackCount.textContent = countDiscs('black');
+                whiteCount.textContent = countDiscs('white');
+            }
+            
+            // ゲーム終了判定
+            function isGameOver() {
+                // 空きマスがない場合
+                let hasEmpty = false;
+                for (let i = 0; i < boardSize && !hasEmpty; i++) {
+                    for (let j = 0; j < boardSize && !hasEmpty; j++) {
+                        if (gameBoard[i][j] === null) {
+                            hasEmpty = true;
+                        }
+                    }
+                }
+                
+                if (!hasEmpty) return true;
+                
+                // 両プレイヤーとも置けない場合
+                return getValidMoves('black').length === 0 && getValidMoves('white').length === 0;
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
+            }
+            
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreBlack.textContent = scores.black;
+                scoreWhite.textContent = scores.white;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // リセットボタンのイベント（現在のゲームをリセット）
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント（スコアもリセット）
+            newGameButton.addEventListener('click', () => {
+                scores = { black: 0, white: 0, draw: 0 };
+                updateScoreBoard();
+                initializeBoard();
+            });
+            
+            // 初期化
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
