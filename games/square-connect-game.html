@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>四角並べ</title>
+    <title>四角並べ - 正方形を作るゲーム</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -90,7 +90,7 @@
             background-color: black;
             opacity: 1;
         }
-                    .cell.white::before {
+        .cell.white::before {
             background-color: white;
             border: 1px solid #333;
             opacity: 1;
@@ -151,11 +151,24 @@
         .example-images {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, auto);
             gap: 15px;
             margin: 15px auto;
             max-width: 600px;
         }
+        
+        /* スマホ表示のグリッドレイアウト調整 */
+        @media (max-width: 600px) {
+            .example-images {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .example-images {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         .example-container {
             display: flex;
             flex-direction: column;
@@ -174,6 +187,15 @@
             grid-template-rows: repeat(5, 1fr);
             gap: 0;
         }
+        
+        /* スマホでの表示サイズ調整 */
+        @media (max-width: 600px) {
+            .example-image {
+                width: 120px;
+                height: 120px;
+            }
+        }
+        
         .example-cell {
             border: 1px solid #8B4513;
             position: relative;
@@ -225,9 +247,9 @@
         <div class="rules">
             <p><strong>ルール説明:</strong></p>
             <p>1. 自分の石で<strong>正方形の4隅</strong>を作ると勝ちです</p>
-            <p>2. 大小様々な正方形が作れます（小さいもの、大きいもの）</p>
+            <p>2. どんなサイズの正方形でもOK（小さい、大きい、斜め）</p>
             <p>3. 正方形の内部に敵の石があっても構いません</p>
-            <p>4. <strong>斜めの正方形、長方形や台形など</strong>は勝利になりません</p>
+            <p>4. 長方形や台形など、正方形以外の形は勝利になりません</p>
         </div>
         
         <div class="example-images">
@@ -284,7 +306,7 @@
                     
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
-                    <div class="example-cell"></div>
+                    <div class="example-cell white"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     
@@ -303,7 +325,7 @@
                 <div class="example-label">勝利例: 大きな正方形</div>
             </div>
             
-            <!-- 勝利例3: 中に敵の石がある正方形 -->
+            <!-- 勝利例3: 斜めの正方形（正しい修正版） -->
             <div class="example-container">
                 <div class="example-image">
                     <div class="example-cell"></div>
@@ -313,30 +335,30 @@
                     <div class="example-cell"></div>
                     
                     <div class="example-cell"></div>
+                    <div class="example-cell"></div>
                     <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell white highlight"></div>
                     <div class="example-cell"></div>
                     
                     <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell black"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell"></div>
                     <div class="example-cell white highlight"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell white highlight"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                 </div>
-                <div class="example-label">勝利例: 内部に敵の石がある</div>
+                <div class="example-label">勝利例: 斜めの正方形</div>
             </div>
             
             <!-- 非勝利例1: 長方形 -->
@@ -348,11 +370,11 @@
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     
-                    <div class="example-cell"></div>
                     <div class="example-cell white"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
                     
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
@@ -360,11 +382,11 @@
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     
-                    <div class="example-cell"></div>
                     <div class="example-cell white"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
                     
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
@@ -375,43 +397,7 @@
                 <div class="example-label">勝利にならない例:<br>長方形（正方形ではない）</div>
             </div>
             
-            <!-- 非勝利例2: 斜めの正方形 -->
-            <div class="example-container">
-                <div class="example-image">
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell white"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell white"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell white"></div>
-                    <div class="example-cell"></div>
-                    
-                    <div class="example-cell"></div>
-                    <div class="example-cell white"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                    <div class="example-cell"></div>
-                </div>
-                <div class="example-label">勝利にならない例:<br>斜めの正方形</div>
-            </div>
-
-            <!-- 非勝利例3: 異なる色の石が混ざっている -->
+            <!-- 非勝利例2: 異なる色の石が混ざっている -->
             <div class="example-container">
                 <div class="example-image">
                     <div class="example-cell"></div>
@@ -422,7 +408,7 @@
                     
                     <div class="example-cell"></div>
                     <div class="example-cell black"></div>
-                    <div class="example-cell black"></div>
+                    <div class="example-cell white"></div>
                     <div class="example-cell"></div>
                     <div class="example-cell"></div>
                     
@@ -445,6 +431,42 @@
                     <div class="example-cell"></div>
                 </div>
                 <div class="example-label">勝利にならない例:<br>異なる色の石が混ざっている</div>
+            </div>
+
+            <!-- 非勝利例3: 平行四辺形（修正版） -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利にならない例:<br>平行四辺形（正方形ではない）</div>
             </div>
         </div>
         
@@ -539,7 +561,7 @@
                 updateStatus();
             }
             
-            // 勝利判定（斜めでない正方形の4隅）
+            // 勝利判定（どんな形でも正方形の4隅）
             function checkWin(row, col) {
                 // 自分の石の全座標を取得
                 const myStones = [];
@@ -564,7 +586,7 @@
                                     myStones[l]
                                 ];
                                 
-                                if (isNonDiagonalSquare(points)) {
+                                if (isSquare(points)) {
                                     // 勝利の石を赤枠で囲む
                                     highlightWinningStones(points);
                                     return true;
@@ -593,64 +615,35 @@
                 }
             }
             
-            // 4点が斜めでない正方形を形成するかチェック
-            function isNonDiagonalSquare(points) {
-                // 点をソートして処理を簡単にする
-                points.sort((a, b) => a.row === b.row ? a.col - b.col : a.row - b.row);
-                
-                // 全ての点の組み合わせに対して、座標が軸に平行な正方形であるかチェック
-                // 4点から正方形を形成する場合、必ず左上、右上、左下、右下の順に並べられるはず
-                
-                // 縦横の差分がすべての点で一貫していることを確認
-                const rowDiffs = [];
-                const colDiffs = [];
-                
+            // 4点が正方形を形成するかチェック
+            function isSquare(points) {
+                // 全ての点のペアの距離の二乗を計算
+                const distances = [];
                 for (let i = 0; i < 4; i++) {
                     for (let j = i + 1; j < 4; j++) {
-                        rowDiffs.push(Math.abs(points[i].row - points[j].row));
-                        colDiffs.push(Math.abs(points[i].col - points[j].col));
+                        const d = distanceSquared(points[i], points[j]);
+                        distances.push(d);
                     }
                 }
                 
-                // 縦と横の差が同じ値である必要がある
-                const uniqueRowDiffs = [...new Set(rowDiffs.filter(d => d > 0))];
-                const uniqueColDiffs = [...new Set(colDiffs.filter(d => d > 0))];
+                // 距離を昇順にソート
+                distances.sort((a, b) => a - b);
                 
-                if (uniqueRowDiffs.length !== 1 || uniqueColDiffs.length !== 1) {
-                    return false;
-                }
-                
-                // 縦と横の差が同じ値である必要がある（正方形の条件）
-                if (uniqueRowDiffs[0] !== uniqueColDiffs[0]) {
-                    return false;
-                }
-                
-                // 軸に平行な正方形の場合、X座標とY座標はそれぞれ2種類の値だけを持つ
-                const uniqueRows = [...new Set(points.map(p => p.row))];
-                const uniqueCols = [...new Set(points.map(p => p.col))];
-                
-                if (uniqueRows.length !== 2 || uniqueCols.length !== 2) {
-                    return false;
-                }
-                
-                // 各行、各列に2つの点があることを確認
-                const rowCounts = {};
-                const colCounts = {};
-                
-                points.forEach(p => {
-                    rowCounts[p.row] = (rowCounts[p.row] || 0) + 1;
-                    colCounts[p.col] = (colCounts[p.col] || 0) + 1;
-                });
-                
-                for (const count of Object.values(rowCounts)) {
-                    if (count !== 2) return false;
-                }
-                
-                for (const count of Object.values(colCounts)) {
-                    if (count !== 2) return false;
-                }
-                
-                return true;
+                // 正方形の条件: 
+                // - 4つの辺の長さが等しい (distances[0] == distances[1] == distances[2] == distances[3])
+                // - 2つの対角線の長さが等しい (distances[4] == distances[5])
+                return (
+                    distances[0] > 0 && // 長さが0でない
+                    distances[0] === distances[1] && 
+                    distances[1] === distances[2] && 
+                    distances[2] === distances[3] && 
+                    distances[4] === distances[5]
+                );
+            }
+            
+            // 2点間の距離の二乗を計算
+            function distanceSquared(p1, p2) {
+                return (p1.row - p2.row) ** 2 + (p1.col - p2.col) ** 2;
             }
             
             // 引き分け判定
