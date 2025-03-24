@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四角並べ - 正方形を作るゲーム</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            background-color: #DEB887;
+            padding: 10px;
+            border: 2px solid #8B4513;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 500px) {
+            .board {
+                grid-template-columns: repeat(15, 20px);
+                grid-template-rows: repeat(15, 20px);
+            }
+            .cell {
+                width: 20px !important;
+                height: 20px !important;
+            }
+            .cell::before {
+                width: 16px !important;
+                height: 16px !important;
+            }
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            border: 1px solid #8B4513;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell::before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .cell.black::before {
+            background-color: black;
+            opacity: 1;
+        }
+                    .cell.white::before {
+            background-color: white;
+            border: 1px solid #333;
+            opacity: 1;
+        }
+        .cell.winning-stone::before {
+            box-shadow: 0 0 0 2px red;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+        .rules {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            max-width: 500px;
+        }
+        .example-images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 15px;
+            margin: 15px auto;
+            max-width: 600px;
+        }
+        .example-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .example-image {
+            width: 150px;
+            height: 150px;
+            border: 1px solid #8B4513;
+            background-color: #DEB887;
+            padding: 5px;
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 0;
+        }
+        .example-cell {
+            border: 1px solid #8B4513;
+            position: relative;
+        }
+        .example-cell::before {
+            content: "";
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-radius: 50%;
+        }
+        .example-cell.black::before {
+            background-color: black;
+        }
+        .example-cell.white::before {
+            background-color: white;
+            border: 1px solid #333;
+        }
+        .example-label {
+            font-weight: bold;
+            margin-top: 5px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        .winning-stone {
+            position: relative;
+        }
+        .winning-stone::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid red;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .example-cell.highlight::before {
+            box-shadow: 0 0 0 2px red;
+        }
+    </style>
+</head>
+<body>
+    <h1>四角並べ</h1>
+    <div class="game-container">
+        <div class="rules">
+            <p><strong>ルール説明:</strong></p>
+            <p>1. 自分の石で<strong>正方形の4隅</strong>を作ると勝ちです</p>
+            <p>2. どんなサイズの正方形でもOK（小さい、大きい、斜め）</p>
+            <p>3. 正方形の内部に敵の石があっても構いません</p>
+            <p>4. 長方形や台形など、正方形以外の形は勝利になりません</p>
+        </div>
+        
+        <div class="example-images">
+            <!-- 勝利例1: 2x2の正方形 -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利例: 2x2の正方形</div>
+            </div>
+            
+            <!-- 勝利例2: 大きな正方形 -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black highlight"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell black highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black highlight"></div>
+                </div>
+                <div class="example-label">勝利例: 大きな正方形<br>(内部に敵の石があっても問題なし)</div>
+            </div>
+            
+            <!-- 勝利例3: 斜めの正方形（正しい修正版） -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell white highlight"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利例: 斜めの正方形<br>(赤線で囲まれた石が勝利条件)</div>
+            </div>
+            
+            <!-- 非勝利例1: 長方形 -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利にならない例:<br>長方形（正方形ではない）</div>
+            </div>
+            
+            <!-- 非勝利例2: 異なる色の石が混ざっている -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell white"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell white"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利にならない例:<br>異なる色の石が混ざっている</div>
+            </div>
+
+            <!-- 非勝利例3: 平行四辺形（修正版） -->
+            <div class="example-container">
+                <div class="example-image">
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell black"></div>
+                    <div class="example-cell"></div>
+                    <div class="example-cell"></div>
+                </div>
+                <div class="example-label">勝利にならない例:<br>平行四辺形（正方形ではない）</div>
+            </div>
+        </div>
+        
+        <div class="status" id="status">黒の番です</div>
+        <div class="score-board">
+            <div class="score">黒: <span id="score-black">0</span></div>
+            <div class="score">白: <span id="score-white">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>このページはAIによって生成されたものです</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardSize = 15;
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreDraw = document.getElementById('score-draw');
+            
+            let gameBoard = [];
+            let currentPlayer = 'black';
+            let gameActive = true;
+            let scores = {
+                black: 0,
+                white: 0,
+                draw: 0
+            };
+            
+            // ゲームボードの初期化
+            function initializeBoard() {
+                board.innerHTML = '';
+                gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.addEventListener('click', () => handleCellClick(i, j));
+                        board.appendChild(cell);
+                    }
+                }
+                
+                currentPlayer = 'black';
+                gameActive = true;
+                updateStatus();
+            }
+            
+            // セルクリック時の処理
+            function handleCellClick(row, col) {
+                if (!gameActive || gameBoard[row][col] !== null) {
+                    return;
+                }
+                
+                gameBoard[row][col] = currentPlayer;
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add(currentPlayer);
+                
+                if (checkWin(row, col)) {
+                    gameActive = false;
+                    status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の勝ちです！`;
+                    scores[currentPlayer]++;
+                    updateScoreBoard();
+                    return;
+                }
+                
+                if (checkDraw()) {
+                    gameActive = false;
+                    status.textContent = '引き分けです！';
+                    scores.draw++;
+                    updateScoreBoard();
+                    return;
+                }
+                
+                // プレイヤーを切り替え
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                updateStatus();
+            }
+            
+            // 勝利判定（どんな形でも正方形の4隅）
+            function checkWin(row, col) {
+                // 自分の石の全座標を取得
+                const myStones = [];
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === currentPlayer) {
+                            myStones.push({row: i, col: j});
+                        }
+                    }
+                }
+                
+                // 4つの石で正方形を作れるかチェック
+                const len = myStones.length;
+                for (let i = 0; i < len; i++) {
+                    for (let j = i + 1; j < len; j++) {
+                        for (let k = j + 1; k < len; k++) {
+                            for (let l = k + 1; l < len; l++) {
+                                const points = [
+                                    myStones[i],
+                                    myStones[j],
+                                    myStones[k],
+                                    myStones[l]
+                                ];
+                                
+                                if (isSquare(points)) {
+                                    // 勝利の石を赤枠で囲む
+                                    highlightWinningStones(points);
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            
+            // 勝利の石を赤枠で囲む
+            function highlightWinningStones(points) {
+                // 一度すべての勝利マークをクリア
+                document.querySelectorAll('.winning-stone').forEach(el => {
+                    el.classList.remove('winning-stone');
+                });
+                
+                // 勝利の石に赤枠を追加
+                for (const point of points) {
+                    const cell = document.querySelector(`[data-row="${point.row}"][data-col="${point.col}"]`);
+                    if (cell) {
+                        cell.classList.add('winning-stone');
+                    }
+                }
+            }
+            
+            // 4点が正方形を形成するかチェック
+            function isSquare(points) {
+                // 全ての点のペアの距離の二乗を計算
+                const distances = [];
+                for (let i = 0; i < 4; i++) {
+                    for (let j = i + 1; j < 4; j++) {
+                        const d = distanceSquared(points[i], points[j]);
+                        distances.push(d);
+                    }
+                }
+                
+                // 距離を昇順にソート
+                distances.sort((a, b) => a - b);
+                
+                // 正方形の条件: 
+                // - 4つの辺の長さが等しい (distances[0] == distances[1] == distances[2] == distances[3])
+                // - 2つの対角線の長さが等しい (distances[4] == distances[5])
+                return (
+                    distances[0] > 0 && // 長さが0でない
+                    distances[0] === distances[1] && 
+                    distances[1] === distances[2] && 
+                    distances[2] === distances[3] && 
+                    distances[4] === distances[5]
+                );
+            }
+            
+            // 2点間の距離の二乗を計算
+            function distanceSquared(p1, p2) {
+                return (p1.row - p2.row) ** 2 + (p1.col - p2.col) ** 2;
+            }
+            
+            // 引き分け判定
+            function checkDraw() {
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === null) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
+            }
+            
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreBlack.textContent = scores.black;
+                scoreWhite.textContent = scores.white;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // リセットボタンのイベント（現在のゲームをリセット）
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント（スコアもリセット）
+            newGameButton.addEventListener('click', () => {
+                scores = { black: 0, white: 0, draw: 0 };
+                updateScoreBoard();
+                initializeBoard();
+            });
+            
+            // 初期化
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
