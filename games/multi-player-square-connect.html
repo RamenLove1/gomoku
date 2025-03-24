@@ -243,10 +243,20 @@
         .example-images {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, auto);
             gap: 15px;
             margin: 15px auto;
             max-width: 600px;
+        }
+        /* スマホ表示のグリッドレイアウト調整 */
+        @media (max-width: 600px) {
+            .example-images {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 400px) {
+            .example-images {
+                grid-template-columns: 1fr;
+            }
         }
         .example-container {
             display: flex;
@@ -265,6 +275,14 @@
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(5, 1fr);
             gap: 0;
+        }
+
+        /* スマホでの表示サイズ調整 */
+        @media (max-width: 600px) {
+            .example-image {
+                width: 120px;
+                height: 120px;
+            }
         }
         .example-cell {
             border: 1px solid #8B4513;
