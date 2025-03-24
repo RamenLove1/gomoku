@@ -22,7 +22,7 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        .container {
+        .game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -91,18 +91,6 @@
         .start-button:hover {
             background-color: #45a049;
         }
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
         .status {
             margin-bottom: 15px;
             font-size: 18px;
@@ -110,74 +98,41 @@
             text-align: center;
         }
         .players-container {
-            width: 100%;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
             margin-bottom: 20px;
+            width: 100%;
         }
         .player-card {
-            background-color: #f0f0f0;
+            width: 120px;
+            padding: 10px;
             border-radius: 8px;
-            padding: 15px;
-            min-width: 120px;
-            text-align: center;
+            background-color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
         }
-        .player-card.active {
+        .player-card.current {
             border: 2px solid #4CAF50;
             background-color: #e8f5e9;
         }
         .player-card.eliminated {
-            background-color: #ffebee;
-            color: #b71c1c;
-            text-decoration: line-through;
-            opacity: 0.7;
+            opacity: 0.5;
+            background-color: #f5f5f5;
         }
         .player-name {
             font-weight: bold;
             margin-bottom: 5px;
         }
         .player-hand {
-            font-size: 2.5rem;
+            font-size: 40px;
             margin: 10px 0;
             height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .roulette-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .roulette {
-            font-size: 4rem;
-            padding: 20px;
-            background-color: #eee;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .stop-button {
-            padding: 12px 40px;
-            font-size: 18px;
-            background-color: #ff5722;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .stop-button:hover {
-            background-color: #e64a19;
-        }
-        .stop-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
         }
         .controls {
             margin-top: 20px;
@@ -185,7 +140,7 @@
             justify-content: center;
             gap: 10px;
         }
-        button {
+        .control-button {
             padding: 10px 20px;
             font-size: 16px;
             background-color: #4CAF50;
@@ -195,19 +150,54 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        button:hover {
+        .control-button:hover {
             background-color: #45a049;
         }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .next-button {
+            background-color: #2196F3;
+            color: white;
+        }
+        .next-button:hover {
+            background-color: #0b7dda;
+        }
+        .hand-selector {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .hand-selector.active {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        .round-info {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
         }
         .winner-announcement {
+            margin: 20px 0;
             font-size: 24px;
             font-weight: bold;
             color: #4CAF50;
-            margin: 20px 0;
             text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
         }
         .hidden {
             display: none;
@@ -221,19 +211,6 @@
             max-width: 500px;
             padding: 10px;
             border-top: 1px solid #ddd;
-        }
-        .highlight {
-            animation: highlight-pulse 1s ease infinite;
-        }
-        @keyframes highlight-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-        }
-        .round-info {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: #666;
         }
     </style>
 </head>
@@ -260,10 +237,10 @@
             <div class="option-group">
                 <span class="option-label">難易度:</span>
                 <div class="option-buttons" id="difficulty-options">
-                    <div class="option-button selected" data-difficulty="easy">簡単</div>
-                    <div class="option-button" data-difficulty="medium">普通</div>
-                    <div class="option-button" data-difficulty="hard">難しい</div>
-                    <div class="option-button" data-difficulty="extreme">超難しい</div>
+                    <div class="option-button selected" data-difficulty="easy">簡単 (500ms)</div>
+                    <div class="option-button" data-difficulty="medium">普通 (300ms)</div>
+                    <div class="option-button" data-difficulty="hard">難しい (200ms)</div>
+                    <div class="option-button" data-difficulty="extreme">超難しい (100ms)</div>
                 </div>
             </div>
         </div>
@@ -272,24 +249,21 @@
     
     <!-- ゲーム画面 -->
     <div class="game-container hidden" id="game-screen">
-        <div class="status" id="status">ゲーム準備中...</div>
-        <div class="round-info" id="round-info">ラウンド: 1</div>
+        <div class="round-info" id="round-info">ラウンド 1</div>
+        <div class="status" id="status">準備中...</div>
+        
+        <div class="hand-selector" id="hand-selector">👊</div>
         
         <div class="players-container" id="players-container">
             <!-- プレイヤーカードはJSで動的に生成 -->
         </div>
         
-        <div class="roulette-container" id="roulette-container">
-            <div class="roulette" id="roulette">👊</div>
-            <button class="stop-button" id="stop-button">ストップ！</button>
-        </div>
-        
-        <div class="winner-announcement hidden" id="winner-announcement"></div>
+        <div id="winner-announcement" class="winner-announcement hidden"></div>
         
         <div class="controls">
-            <button id="next-round-button" class="hidden">次のラウンド</button>
-            <button id="reset-button">リセット</button>
-            <button id="settings-button">設定に戻る</button>
+            <button class="control-button next-button" id="next-button">次のラウンド</button>
+            <button class="control-button reset-button" id="reset-button">リセット</button>
+            <button class="control-button settings-button" id="settings-button">設定に戻る</button>
         </div>
         
         <div class="disclaimer">
@@ -306,39 +280,27 @@
             const playerOptions = document.querySelectorAll('#player-options .option-button');
             const difficultyOptions = document.querySelectorAll('#difficulty-options .option-button');
             const startGameButton = document.getElementById('start-game');
-            const settingsButton = document.getElementById('settings-button');
+            const handSelector = document.getElementById('hand-selector');
+            const playersContainer = document.getElementById('players-container');
             const status = document.getElementById('status');
             const roundInfo = document.getElementById('round-info');
-            const playersContainer = document.getElementById('players-container');
-            const roulette = document.getElementById('roulette');
-            const stopButton = document.getElementById('stop-button');
+            const nextButton = document.getElementById('next-button');
             const resetButton = document.getElementById('reset-button');
-            const nextRoundButton = document.getElementById('next-round-button');
+            const settingsButton = document.getElementById('settings-button');
             const winnerAnnouncement = document.getElementById('winner-announcement');
-            const rouletteContainer = document.getElementById('roulette-container');
             
             // ゲーム設定
             let numberOfPlayers = 2; // デフォルトは2人プレイ
             let difficulty = 'easy'; // デフォルトは簡単
+            let speedMs = 500; // 簡単モードの速度
             let players = [];
-            let currentPlayerIndex = 0;
+            let currentPlayerIndex = -1;
             let round = 1;
-            let rouletteInterval;
-            let rouletteSpeed = 500; // ミリ秒（初期値）
-            let isRouletteRunning = false;
-            let gameActive = false;
-            
-            // じゃんけんの手
-            const hands = ['👊', '✌️', '✋'];
+            let handInterval = null;
+            let hands = ['👊', '✌️', '✋']; // グー、チョキ、パー
             let currentHandIndex = 0;
-            
-            // 難易度に基づくルーレットの速度設定（ミリ秒）
-            const difficultySettings = {
-                'easy': 500,
-                'medium': 300,
-                'hard': 150,
-                'extreme': 50
-            };
+            let gameState = 'setup'; // setup, playing, selecting, roundEnd, gameEnd
+            let gameActive = false;
             
             // プレイヤー数の選択イベント
             playerOptions.forEach(option => {
@@ -355,7 +317,16 @@
                     difficultyOptions.forEach(btn => btn.classList.remove('selected'));
                     option.classList.add('selected');
                     difficulty = option.dataset.difficulty;
-                    rouletteSpeed = difficultySettings[difficulty];
+                    
+                    if (difficulty === 'easy') {
+                        speedMs = 500;
+                    } else if (difficulty === 'medium') {
+                        speedMs = 300;
+                    } else if (difficulty === 'hard') {
+                        speedMs = 200;
+                    } else {
+                        speedMs = 100;
+                    }
                 });
             });
             
@@ -366,62 +337,38 @@
                 initializeGame();
             });
             
-            // 設定に戻るボタン
-            settingsButton.addEventListener('click', () => {
-                gameScreen.classList.add('hidden');
-                setupScreen.classList.remove('hidden');
-                clearInterval(rouletteInterval);
-                isRouletteRunning = false;
+            // 次のラウンドボタン
+            nextButton.addEventListener('click', () => {
+                if (gameState === 'roundEnd') {
+                    startNextRound();
+                }
             });
             
-            // リセットボタンのイベント
-            resetButton.addEventListener('click', initializeGame);
+            // リセットボタン
+            resetButton.addEventListener('click', () => {
+                resetGame();
+            });
             
-            // 次のラウンドボタンのイベント
-            nextRoundButton.addEventListener('click', startNextRound);
+            // 設定に戻るボタン
+            settingsButton.addEventListener('click', () => {
+                stopHandAnimation();
+                gameScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+                gameState = 'setup';
+                gameActive = false;
+            });
             
-            // ストップボタンのイベント
-            stopButton.addEventListener('click', () => {
-                if (isRouletteRunning) {
-                    stopRoulette();
+            // 手を選択するためのクリックイベント
+            handSelector.addEventListener('click', () => {
+                if (gameState === 'selecting' && gameActive) {
+                    selectHand();
                 }
             });
             
             // ゲームの初期化
             function initializeGame() {
-                // プレイヤーを初期化
-                initializePlayers();
-                
-                // ラウンド情報をリセット
-                round = 1;
-                roundInfo.textContent = `ラウンド: ${round}`;
-                
-                // UIをリセット
-                winnerAnnouncement.classList.add('hidden');
-                nextRoundButton.classList.add('hidden');
-                rouletteContainer.classList.remove('hidden');
-                
-                // ゲーム状態を初期化
-                gameActive = true;
-                
-                // プレイヤーの順番をランダムに決定
-                shufflePlayers();
-                
-                // 最初のプレイヤーを設定
-                currentPlayerIndex = 0;
-                updatePlayerHighlight();
-                
-                // ステータスの更新
-                updateStatus();
-                
-                // ルーレットを開始
-                startRoulette();
-            }
-            
-            // プレイヤーの初期化
-            function initializePlayers() {
+                // プレイヤー配列の初期化
                 players = [];
-                
                 for (let i = 0; i < numberOfPlayers; i++) {
                     players.push({
                         id: i,
@@ -431,233 +378,344 @@
                     });
                 }
                 
-                // プレイヤーカードを生成
-                renderPlayers();
+                // プレイヤーの順番をランダム化
+                shufflePlayers();
+                
+                // 新しい順番を表示
+                const playerOrder = players.map(p => p.name).join('、');
+                status.textContent = `順番: ${playerOrder}`;
+                
+                // ラウンドをリセット
+                round = 1;
+                gameState = 'playing';
+                gameActive = true;
+                
+                // UI更新
+                updateUI();
+                
+                // 最初のプレイヤーから開始
+                currentPlayerIndex = 0;
+                startPlayerTurn();
             }
             
-            // プレイヤーカードのレンダリング
-            function renderPlayers() {
+            // プレイヤーの順番をランダム化
+            function shufflePlayers() {
+                for (let i = players.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [players[i], players[j]] = [players[j], players[i]];
+                }
+                
+                // 順番変更後はUI表示も更新する
+                updatePlayerHighlight();
+            }
+            
+            // プレイヤーのターンを開始
+            function startPlayerTurn() {
+                if (!gameActive) return;
+                
+                // インデックスが範囲外の場合は最初に戻す
+                if (currentPlayerIndex >= players.length) {
+                    currentPlayerIndex = 0;
+                }
+                
+                const currentPlayer = players[currentPlayerIndex];
+                
+                if (currentPlayer.eliminated) {
+                    // 脱落プレイヤーをスキップ
+                    moveToNextPlayer();
+                    return;
+                }
+                
+                // 残りのプレイヤーが1人なら勝者を決定
+                const activePlayers = players.filter(p => !p.eliminated);
+                if (activePlayers.length === 1) {
+                    declareWinner(activePlayers[0]);
+                    return;
+                }
+                
+                // ステータス更新
+                status.textContent = `${currentPlayer.name}の番です - タイミングを見て選んでください！`;
+                updatePlayerHighlight();
+                
+                // 手の変更アニメーション開始
+                startHandAnimation();
+                
+                // 現在の状態を選択中に設定
+                gameState = 'selecting';
+            }
+            
+            // 手のアニメーションを開始
+            function startHandAnimation() {
+                currentHandIndex = 0;
+                handSelector.textContent = hands[currentHandIndex];
+                handSelector.classList.add('active');
+                
+                // インターバルを設定
+                handInterval = setInterval(() => {
+                    currentHandIndex = (currentHandIndex + 1) % hands.length;
+                    handSelector.textContent = hands[currentHandIndex];
+                }, speedMs);
+            }
+            
+            // 手のアニメーションを停止
+            function stopHandAnimation() {
+                clearInterval(handInterval);
+                handSelector.classList.remove('active');
+            }
+            
+            // 手を選択
+            function selectHand() {
+                if (gameState !== 'selecting') return;
+                
+                // アニメーション停止
+                stopHandAnimation();
+                
+                // 現在の手を記録
+                const selectedHand = hands[currentHandIndex];
+                const currentPlayer = players[currentPlayerIndex];
+                currentPlayer.hand = selectedHand;
+                
+                // UI更新 - 全体のUIを更新して確実に手が反映されるようにする
+                updateUI();
+                
+                // 次のプレイヤーへ
+                moveToNextPlayer();
+            }
+            
+            // 次のプレイヤーへ移動
+            function moveToNextPlayer() {
+                // 次のプレイヤーのインデックスを計算
+                let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                
+                // 全プレイヤーが選択完了したかチェック
+                let allSelected = true;
+                let activePlayers = players.filter(p => !p.eliminated);
+                
+                for (let player of activePlayers) {
+                    if (player.hand === null) {
+                        allSelected = false;
+                        break;
+                    }
+                }
+                
+                if (allSelected) {
+                    // 全プレイヤーが選択完了したので結果を判定
+                    evaluateRound();
+                } else {
+                    // 次のプレイヤーへ
+                    currentPlayerIndex = nextPlayerIndex;
+                    startPlayerTurn();
+                }
+            }
+            
+            // ラウンドの結果を評価
+            function evaluateRound() {
+                gameState = 'roundEnd';
+                
+                // 有効なプレイヤーのみ対象
+                const activePlayers = players.filter(p => !p.eliminated);
+                
+                // 勝ち手の判定
+                let hands = activePlayers.map(p => p.hand);
+                let hasRock = hands.includes('👊');
+                let hasScissors = hands.includes('✌️');
+                let hasPaper = hands.includes('✋');
+                
+                // あいこでなければ勝者を決定
+                if ((hasRock && hasScissors && !hasPaper) || 
+                    (hasRock && !hasScissors && hasPaper) || 
+                    (!hasRock && hasScissors && hasPaper)) {
+                    
+                    let winningHand;
+                    
+                    if (hasRock && hasScissors && !hasPaper) {
+                        // グーが勝ち
+                        winningHand = '👊';
+                        status.textContent = "グーがチョキに勝ちました！";
+                    } else if (hasRock && !hasScissors && hasPaper) {
+                        // パーが勝ち
+                        winningHand = '✋';
+                        status.textContent = "パーがグーに勝ちました！";
+                    } else {
+                        // チョキが勝ち
+                        winningHand = '✌️';
+                        status.textContent = "チョキがパーに勝ちました！";
+                    }
+                    
+                    // 敗者を脱落させる
+                    for (let player of activePlayers) {
+                        if (player.hand !== winningHand) {
+                            player.eliminated = true;
+                        }
+                    }
+                } else {
+                    // あいこ
+                    status.textContent = "あいこです！次のラウンドへ進みます。";
+                }
+                
+                // UIを更新
+                updateUI();
+                
+                // 勝者チェック
+                const remainingPlayers = players.filter(p => !p.eliminated);
+                if (remainingPlayers.length === 1) {
+                    declareWinner(remainingPlayers[0]);
+                } else {
+                    // 次のラウンドボタンを有効化
+                    nextButton.disabled = false;
+                }
+            }
+            
+            // 次のラウンドを開始
+            function startNextRound() {
+                // ラウンドをインクリメント
+                round++;
+                roundInfo.textContent = `ラウンド ${round}`;
+                
+                // 手をリセット
+                for (let player of players) {
+                    if (!player.eliminated) {
+                        player.hand = null;
+                    }
+                }
+                
+                // 残っているプレイヤーの順番をランダムに決め直す
+                shuffleRemainingPlayers();
+                
+                // UIを更新
+                updateUI();
+                
+                // ゲーム状態を更新
+                gameState = 'playing';
+                
+                // 最初のプレイヤーから開始
+                currentPlayerIndex = 0;
+                startPlayerTurn();
+            }
+            
+            // 残っているプレイヤーの順番をランダム化
+            function shuffleRemainingPlayers() {
+                // 残っているプレイヤーと脱落したプレイヤーを分ける
+                const activePlayers = players.filter(p => !p.eliminated);
+                const eliminatedPlayers = players.filter(p => p.eliminated);
+                
+                // 残っているプレイヤーをシャッフル
+                for (let i = activePlayers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [activePlayers[i], activePlayers[j]] = [activePlayers[j], activePlayers[i]];
+                }
+                
+                // シャッフルした残りプレイヤーと脱落プレイヤーを結合
+                players = [...activePlayers, ...eliminatedPlayers];
+                
+                // 新しい順番を通知
+                const playerOrder = activePlayers.map(p => p.name).join('、');
+                status.textContent = `新しい順番: ${playerOrder}`;
+            }
+            
+            // 勝者を宣言
+            function declareWinner(winner) {
+                gameState = 'gameEnd';
+                status.textContent = "ゲーム終了！";
+                winnerAnnouncement.textContent = `${winner.name}の勝利！`;
+                winnerAnnouncement.classList.remove('hidden');
+                nextButton.disabled = true;
+            }
+            
+            // ゲームをリセット
+            function resetGame() {
+                stopHandAnimation();
+                
+                // プレイヤーの手と状態をリセット
+                for (let player of players) {
+                    player.hand = null;
+                    player.eliminated = false;
+                }
+                
+                // ラウンドをリセット
+                round = 1;
+                roundInfo.textContent = `ラウンド ${round}`;
+                
+                // 順番をランダム化して再開
+                shufflePlayers();
+                
+                // 新しい順番を表示
+                const playerOrder = players.map(p => p.name).join('、');
+                status.textContent = `新しい順番: ${playerOrder}`;
+                
+                // UI更新
+                winnerAnnouncement.classList.add('hidden');
+                updateUI();
+                
+                // ゲーム状態を更新
+                currentPlayerIndex = 0;
+                gameState = 'playing';
+                gameActive = true;
+                
+                startPlayerTurn();
+            }
+            
+            // プレイヤーハイライトの更新
+            function updatePlayerHighlight() {
+                const playerCards = document.querySelectorAll('.player-card');
+                
+                playerCards.forEach((card, index) => {
+                    const playerId = parseInt(card.dataset.id);
+                    const playerIndex = players.findIndex(p => p.id === playerId);
+                    
+                    if (playerIndex === currentPlayerIndex && gameState === 'selecting') {
+                        card.classList.add('current');
+                    } else {
+                        card.classList.remove('current');
+                    }
+                });
+            }
+            
+            // プレイヤーの手を更新
+            function updatePlayerHand(playerIndex, hand) {
+                // プレイヤーIDを使って対応するプレイヤーカードを見つける
+                const player = players[playerIndex];
+                const playerHandElement = document.querySelector(`.player-card[data-id="${player.id}"] .player-hand`);
+                if (playerHandElement) {
+                    playerHandElement.textContent = hand;
+                }
+            }
+            
+            // UIの更新
+            function updateUI() {
+                // プレイヤーコンテナを更新
                 playersContainer.innerHTML = '';
                 
-                players.forEach(player => {
+                // プレイヤーを順番に表示
+                players.forEach((player, index) => {
                     const playerCard = document.createElement('div');
                     playerCard.classList.add('player-card');
-                    playerCard.id = `player-${player.id}`;
+                    playerCard.dataset.id = player.id;
                     
                     if (player.eliminated) {
                         playerCard.classList.add('eliminated');
                     }
                     
-                    playerCard.innerHTML = `
-                        <div class="player-name">${player.name}</div>
-                        <div class="player-hand" id="hand-${player.id}">${player.hand || ''}</div>
-                    `;
+                    if (index === currentPlayerIndex && gameState === 'selecting') {
+                        playerCard.classList.add('current');
+                    }
+                    
+                    const playerName = document.createElement('div');
+                    playerName.classList.add('player-name');
+                    playerName.textContent = player.name;
+                    
+                    const playerHand = document.createElement('div');
+                    playerHand.classList.add('player-hand');
+                    playerHand.textContent = player.hand || '?';
+                    
+                    playerCard.appendChild(playerName);
+                    playerCard.appendChild(playerHand);
                     
                     playersContainer.appendChild(playerCard);
                 });
-            }
-            
-            // プレイヤーの順番をランダムに決定
-            function shufflePlayers() {
-                for (let i = players.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [players[i], players[j]] = [players[j], players[i]];
-                    
-                    // IDを保持しつつ順番を入れ替える
-                    players[i].id = i;
-                    players[j].id = j;
-                }
                 
-                // プレイヤーカードを再レンダリング
-                renderPlayers();
-            }
-            
-            // ルーレットの開始
-            function startRoulette() {
-                isRouletteRunning = true;
-                stopButton.disabled = false;
-                
-                // 手の初期化
-                currentHandIndex = 0;
-                roulette.textContent = hands[currentHandIndex];
-                
-                // ルーレットの開始
-                rouletteInterval = setInterval(() => {
-                    currentHandIndex = (currentHandIndex + 1) % hands.length;
-                    roulette.textContent = hands[currentHandIndex];
-                }, rouletteSpeed);
-            }
-            
-            // ルーレットの停止
-            function stopRoulette() {
-                clearInterval(rouletteInterval);
-                isRouletteRunning = false;
-                stopButton.disabled = true;
-                
-                // 現在のプレイヤーの手を設定
-                const currentPlayer = players[currentPlayerIndex];
-                currentPlayer.hand = hands[currentHandIndex];
-                
-                // プレイヤーの手を表示
-                const handElement = document.getElementById(`hand-${currentPlayer.id}`);
-                if (handElement) {
-                    handElement.textContent = currentPlayer.hand;
-                }
-                
-                // 次のプレイヤーへ
-                currentPlayerIndex++;
-                
-                // 全員が手を選んだ場合
-                if (currentPlayerIndex >= players.filter(p => !p.eliminated).length) {
-                    // 勝敗判定
-                    setTimeout(() => {
-                        determineResults();
-                    }, 1000);
-                } else {
-                    // 次のプレイヤーへハイライトを移動
-                    updatePlayerHighlight();
-                    updateStatus();
-                    
-                    // ルーレットを再開
-                    setTimeout(() => {
-                        startRoulette();
-                    }, 500);
-                }
-            }
-            
-            // 勝敗の判定
-            function determineResults() {
-                const activePlayers = players.filter(p => !p.eliminated);
-                
-                // 各プレイヤーの手を取得
-                const hands = activePlayers.map(p => p.hand);
-                
-                // 手の出現回数をカウント
-                const handCounts = {
-                    '👊': hands.filter(h => h === '👊').length,
-                    '✌️': hands.filter(h => h === '✌️').length,
-                    '✋': hands.filter(h => h === '✋').length
-                };
-                
-                // すべての手が同じか、すべての手が出揃った場合はあいこ
-                if (
-                    (handCounts['👊'] === hands.length) || 
-                    (handCounts['✌️'] === hands.length) || 
-                    (handCounts['✋'] === hands.length) ||
-                    (handCounts['👊'] > 0 && handCounts['✌️'] > 0 && handCounts['✋'] > 0)
-                ) {
-                    status.textContent = 'あいこです！次のラウンドへ進みます';
-                    prepareNextRound();
-                    return;
-                }
-                
-                // 勝者の手を決定（じゃんけんのルールに基づいて修正）
-                let winningHand;
-                
-                // グーとチョキのみ → グーの勝ち
-                if (handCounts['👊'] > 0 && handCounts['✌️'] > 0 && handCounts['✋'] === 0) {
-                    winningHand = '👊';
-                } 
-                // グーとパーのみ → パーの勝ち
-                else if (handCounts['👊'] > 0 && handCounts['✌️'] === 0 && handCounts['✋'] > 0) {
-                    winningHand = '✋';
-                } 
-                // チョキとパーのみ → チョキの勝ち
-                else if (handCounts['👊'] === 0 && handCounts['✌️'] > 0 && handCounts['✋'] > 0) {
-                    winningHand = '✌️';
-                }
-                
-                // 敗者を除外
-                activePlayers.forEach(player => {
-                    if (player.hand !== winningHand) {
-                        player.eliminated = true;
-                        const playerCard = document.getElementById(`player-${player.id}`);
-                        if (playerCard) {
-                            playerCard.classList.add('eliminated');
-                        }
-                    }
-                });
-                
-                // 残りのプレイヤーを確認
-                const remainingPlayers = players.filter(p => !p.eliminated);
-                
-                if (remainingPlayers.length === 1) {
-                    // 勝者が決定
-                    const winner = remainingPlayers[0];
-                    winnerAnnouncement.textContent = `${winner.name}の勝利！`;
-                    winnerAnnouncement.classList.remove('hidden');
-                    rouletteContainer.classList.add('hidden');
-                    status.textContent = 'ゲーム終了！';
-                    gameActive = false;
-                } else {
-                    // まだ決着がついていない
-                    status.textContent = `${remainingPlayers.length}人が残っています。次のラウンドへ進みます`;
-                    prepareNextRound();
-                }
-            }
-            
-            // 次のラウンドの準備
-            function prepareNextRound() {
-                nextRoundButton.classList.remove('hidden');
-                rouletteContainer.classList.add('hidden');
-                
-                // すべてのプレイヤーの手をリセット
-                players.forEach(player => {
-                    if (!player.eliminated) {
-                        player.hand = null;
-                        const handElement = document.getElementById(`hand-${player.id}`);
-                        if (handElement) {
-                            handElement.textContent = '';
-                        }
-                    }
-                });
-            }
-            
-            // 次のラウンドを開始
-            function startNextRound() {
-                round++;
-                roundInfo.textContent = `ラウンド: ${round}`;
-                
-                // UIをリセット
-                nextRoundButton.classList.add('hidden');
-                rouletteContainer.classList.remove('hidden');
-                
-                // 次のラウンドの最初のプレイヤーを設定
-                currentPlayerIndex = 0;
-                updatePlayerHighlight();
-                updateStatus();
-                
-                // ルーレットを開始
-                startRoulette();
-            }
-            
-            // プレイヤーのハイライトを更新
-            function updatePlayerHighlight() {
-                // すべてのハイライトを削除
-                document.querySelectorAll('.player-card').forEach(card => {
-                    card.classList.remove('active', 'highlight');
-                });
-                
-                // 現在のプレイヤーをハイライト
-                const activePlayers = players.filter(p => !p.eliminated);
-                if (currentPlayerIndex < activePlayers.length) {
-                    const currentPlayer = activePlayers[currentPlayerIndex];
-                    const playerCard = document.getElementById(`player-${currentPlayer.id}`);
-                    if (playerCard) {
-                        playerCard.classList.add('active', 'highlight');
-                    }
-                }
-            }
-            
-            // ステータスの更新
-            function updateStatus() {
-                if (gameActive) {
-                    const activePlayers = players.filter(p => !p.eliminated);
-                    if (currentPlayerIndex < activePlayers.length) {
-                        const currentPlayer = activePlayers[currentPlayerIndex];
-                        status.textContent = `${currentPlayer.name}の番です`;
-                    }
-                }
+                // ラウンド情報を更新
+                roundInfo.textContent = `ラウンド ${round}`;
             }
         });
     </script>
