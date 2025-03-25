@@ -101,6 +101,59 @@
                 max-width: 350px;
             }
         }
+
+        /* コスモスクエア特別スタイル */
+        .cosmos-card {
+            background: linear-gradient(135deg, #0a0a1a 0%, #192440 100%);
+            color: white;
+            border: 2px solid rgba(138, 247, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 140, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .cosmos-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(rgba(255,255,255,.2) 1px, transparent 20px),
+                radial-gradient(rgba(255,255,255,.15) 1px, transparent 15px);
+            background-size: 150px 150px, 100px 100px;
+            background-position: 0 0, 30px 30px;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        .cosmos-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(138, 247, 255, 0.5);
+            border-color: rgba(138, 247, 255, 0.5);
+        }
+        .cosmos-card .game-title {
+            color: #8af7ff;
+            text-shadow: 0 0 10px rgba(0, 174, 255, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+        .cosmos-card .game-description {
+            color: #d9f0ff;
+            position: relative;
+            z-index: 1;
+        }
+        .cosmos-button {
+            background: linear-gradient(180deg, #3a548c, #243667);
+            border: 1px solid #4a6cb7;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 140, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        .cosmos-button:hover {
+            background: linear-gradient(180deg, #4a6cb7, #3a548c);
+            box-shadow: 0 0 15px rgba(138, 247, 255, 0.7);
+        }
     </style>
 </head>
 <body>
@@ -124,6 +177,14 @@
                     <h2 class="game-title">五目並べ</h2>
                     <p class="game-description">5つ石を並べて勝利する伝統的な盤ゲームです。交互に石を置いて、縦・横・斜めのいずれかに5つ連続させましょう。</p>
                     <a href="games/gomoku.html" class="play-button">プレイする</a>
+                </div>
+            </div>
+
+            <div class="game-card cosmos-card">
+                <div class="game-info">
+                    <h2 class="game-title">コスモスクエア</h2>
+                    <p class="game-description">宇宙をテーマにした戦略ボードゲームです。マスに付与されたポイントを獲得し、隣接する石の数だけボーナスを得られます。銀河の征服者になりましょう！</p>
+                    <a href="games/cosmos-square.html" class="play-button cosmos-button">プレイする</a>
                 </div>
             </div>
 
