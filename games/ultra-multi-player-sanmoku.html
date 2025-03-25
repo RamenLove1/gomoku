@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超マルチプレイヤー三目並べ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .setup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .game-options {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .option-group {
+            margin-bottom: 15px;
+        }
+        .option-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .option-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .option-button {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 60px;
+        }
+        .option-button.selected {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .start-button {
+            padding: 12px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        .start-button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 0;
+            background-color: #DEB887;
+            padding: 10px;
+            border: 2px solid #8B4513;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 500px) {
+            .board {
+                grid-template-columns: repeat(15, 20px);
+                grid-template-rows: repeat(15, 20px);
+            }
+            .cell {
+                width: 20px !important;
+                height: 20px !important;
+            }
+            .cell::before {
+                width: 16px !important;
+                height: 16px !important;
+            }
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            box-sizing: border-box;
+            border: 1px solid #8B4513;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell::before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .cell.black::before {
+            background-color: black;
+            opacity: 1;
+        }
+        .cell.white::before {
+            background-color: white;
+            border: 1px solid #333;
+            opacity: 1;
+        }
+        .cell.red::before {
+            background-color: red;
+            opacity: 1;
+        }
+        .cell.blue::before {
+            background-color: blue;
+            opacity: 1;
+        }
+        .cell.green::before {
+            background-color: green;
+            opacity: 1;
+        }
+        .cell.yellow::before {
+            background-color: gold;
+            opacity: 1;
+        }
+        .cell.purple::before {
+            background-color: purple;
+            opacity: 1;
+        }
+        .cell.orange::before {
+            background-color: orange;
+            opacity: 1;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+            flex-wrap: wrap;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+            margin: 5px;
+        }
+        .black-score {
+            background-color: #eee;
+            color: black;
+        }
+        .white-score {
+            background-color: #eee;
+            color: black;
+        }
+        .red-score {
+            background-color: #eee;
+            color: black;
+        }
+        .blue-score {
+            background-color: #eee;
+            color: black;
+        }
+        .green-score {
+            background-color: #eee;
+            color: black;
+        }
+        .yellow-score {
+            background-color: #eee;
+            color: black;
+        }
+        .purple-score {
+            background-color: #eee;
+            color: black;
+        }
+        .orange-score {
+            background-color: #eee;
+            color: black;
+        }
+        .player-turn {
+            border: 2px solid #4CAF50;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>超マルチプレイヤー三目並べ</h1>
+    
+    <!-- ゲーム設定画面 -->
+    <div class="setup-container" id="setup-screen">
+        <h2>ゲーム設定</h2>
+        <div class="game-options">
+            <div class="option-group">
+                <span class="option-label">プレイヤー数:</span>
+                <div class="option-buttons">
+                    <div class="option-button selected" data-players="5">5人</div>
+                    <div class="option-button" data-players="6">6人</div>
+                    <div class="option-button" data-players="7">7人</div>
+                    <div class="option-button" data-players="8">8人</div>
+                </div>
+            </div>
+        </div>
+        <button class="start-button" id="start-game">ゲーム開始</button>
+    </div>
+    
+    <!-- ゲーム画面 -->
+    <div class="game-container hidden" id="game-screen">
+        <div class="status" id="status">黒の番です</div>
+        <div class="score-board" id="score-board">
+            <div class="score black-score" id="black-score">黒: <span id="score-black">0</span></div>
+            <div class="score white-score" id="white-score">白: <span id="score-white">0</span></div>
+            <div class="score red-score" id="red-score">赤: <span id="score-red">0</span></div>
+            <div class="score blue-score" id="blue-score">青: <span id="score-blue">0</span></div>
+            <div class="score green-score" id="green-score">緑: <span id="score-green">0</span></div>
+            <div class="score yellow-score hidden" id="yellow-score">黄: <span id="score-yellow">0</span></div>
+            <div class="score purple-score hidden" id="purple-score">紫: <span id="score-purple">0</span></div>
+            <div class="score orange-score hidden" id="orange-score">橙: <span id="score-orange">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
+            <button id="settings-button">設定に戻る</button>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>このページはAIによって生成されたものです</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 要素の取得
+            const setupScreen = document.getElementById('setup-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const playerOptions = document.querySelectorAll('.option-button[data-players]');
+            const startGameButton = document.getElementById('start-game');
+            const settingsButton = document.getElementById('settings-button');
+            const boardSize = 15;
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreRed = document.getElementById('score-red');
+            const scoreBlue = document.getElementById('score-blue');
+            const scoreGreen = document.getElementById('score-green');
+            const scoreYellow = document.getElementById('score-yellow');
+            const scorePurple = document.getElementById('score-purple');
+            const scoreOrange = document.getElementById('score-orange');
+            const scoreDraw = document.getElementById('score-draw');
+            const blackScore = document.getElementById('black-score');
+            const whiteScore = document.getElementById('white-score');
+            const redScore = document.getElementById('red-score');
+            const blueScore = document.getElementById('blue-score');
+            const greenScore = document.getElementById('green-score');
+            const yellowScore = document.getElementById('yellow-score');
+            const purpleScore = document.getElementById('purple-score');
+            const orangeScore = document.getElementById('orange-score');
+            
+            // ゲーム設定
+            let numberOfPlayers = 5; // デフォルトは5人プレイ
+            let players = ['black', 'white', 'red', 'blue', 'green'];
+            let gameBoard = [];
+            let currentPlayerIndex = 0;
+            let gameActive = true;
+            let scores = {
+                black: 0,
+                white: 0,
+                red: 0,
+                blue: 0,
+                green: 0,
+                yellow: 0,
+                purple: 0,
+                orange: 0,
+                draw: 0
+            };
+            
+            // プレイヤー数の選択イベント
+            playerOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    playerOptions.forEach(btn => btn.classList.remove('selected'));
+                    option.classList.add('selected');
+                    numberOfPlayers = parseInt(option.dataset.players);
+                });
+            });
+            
+            // ゲーム開始ボタン
+            startGameButton.addEventListener('click', () => {
+                setupScreen.classList.add('hidden');
+                gameScreen.classList.remove('hidden');
+                initializeGame();
+            });
+            
+            // 設定に戻るボタン
+            settingsButton.addEventListener('click', () => {
+                gameScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+            });
+            
+            // ゲームの初期化
+            function initializeGame() {
+                // プレイヤー配列を設定
+                if (numberOfPlayers === 5) {
+                    players = ['black', 'white', 'red', 'blue', 'green'];
+                    yellowScore.classList.add('hidden');
+                    purpleScore.classList.add('hidden');
+                    orangeScore.classList.add('hidden');
+                } else if (numberOfPlayers === 6) {
+                    players = ['black', 'white', 'red', 'blue', 'green', 'yellow'];
+                    yellowScore.classList.remove('hidden');
+                    purpleScore.classList.add('hidden');
+                    orangeScore.classList.add('hidden');
+                } else if (numberOfPlayers === 7) {
+                    players = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'purple'];
+                    yellowScore.classList.remove('hidden');
+                    purpleScore.classList.remove('hidden');
+                    orangeScore.classList.add('hidden');
+                } else {
+                    players = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+                    yellowScore.classList.remove('hidden');
+                    purpleScore.classList.remove('hidden');
+                    orangeScore.classList.remove('hidden');
+                }
+                
+                // スコアの初期化
+                scores = { 
+                    black: 0, 
+                    white: 0, 
+                    red: 0, 
+                    blue: 0, 
+                    green: 0,
+                    yellow: 0,
+                    purple: 0,
+                    orange: 0,
+                    draw: 0 
+                };
+                updateScoreBoard();
+                
+                // ボードの初期化
+                initializeBoard();
+            }
+            
+            // ゲームボードの初期化
+            function initializeBoard() {
+                board.innerHTML = '';
+                gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.addEventListener('click', () => handleCellClick(i, j));
+                        board.appendChild(cell);
+                    }
+                }
+                
+                currentPlayerIndex = 0;
+                gameActive = true;
+                updateStatus();
+                updatePlayerTurn();
+            }
+            
+            // セルクリック時の処理
+            function handleCellClick(row, col) {
+                if (!gameActive || gameBoard[row][col] !== null) {
+                    return;
+                }
+                
+                const currentPlayer = players[currentPlayerIndex];
+                gameBoard[row][col] = currentPlayer;
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add(currentPlayer);
+                
+                if (checkWin(row, col)) {
+                    gameActive = false;
+                    const playerNames = {
+                        'black': '黒',
+                        'white': '白',
+                        'red': '赤',
+                        'blue': '青',
+                        'green': '緑',
+                        'yellow': '黄',
+                        'purple': '紫',
+                        'orange': '橙'
+                    };
+                    status.textContent = `${playerNames[currentPlayer]}の勝ちです！`;
+                    scores[currentPlayer]++;
+                    updateScoreBoard();
+                    return;
+                }
+                
+                if (checkDraw()) {
+                    gameActive = false;
+                    status.textContent = '引き分けです！';
+                    scores.draw++;
+                    updateScoreBoard();
+                    return;
+                }
+                
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                updateStatus();
+                updatePlayerTurn();
+            }
+            
+            // 勝利判定（3つ連続）
+            function checkWin(row, col) {
+                const directions = [
+                    [0, 1],  // 水平
+                    [1, 0],  // 垂直
+                    [1, 1],  // 右下対角線
+                    [1, -1]  // 左下対角線
+                ];
+                
+                const currentPlayer = players[currentPlayerIndex];
+                
+                for (const [dr, dc] of directions) {
+                    let count = 1;
+                    
+                    // 正方向にカウント
+                    for (let i = 1; i < 3; i++) {
+                        const r = row + dr * i;
+                        const c = col + dc * i;
+                        
+                        if (r < 0 || r >= boardSize || c < 0 || c >= boardSize || gameBoard[r][c] !== currentPlayer) {
+                            break;
+                        }
+                        
+                        count++;
+                    }
+                    
+                    // 負方向にカウント
+                    for (let i = 1; i < 3; i++) {
+                        const r = row - dr * i;
+                        const c = col - dc * i;
+                        
+                        if (r < 0 || r >= boardSize || c < 0 || c >= boardSize || gameBoard[r][c] !== currentPlayer) {
+                            break;
+                        }
+                        
+                        count++;
+                    }
+                    
+                    if (count >= 3) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            // 引き分け判定
+            function checkDraw() {
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === null) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                const playerNames = {
+                    'black': '黒',
+                    'white': '白',
+                    'red': '赤',
+                    'blue': '青',
+                    'green': '緑',
+                    'yellow': '黄',
+                    'purple': '紫',
+                    'orange': '橙'
+                };
+                status.textContent = `${playerNames[players[currentPlayerIndex]]}の番です`;
+            }
+            
+            // 現在のプレイヤーを視覚的に表示
+            function updatePlayerTurn() {
+                // すべてのプレイヤースコア表示からハイライトを削除
+                blackScore.classList.remove('player-turn');
+                whiteScore.classList.remove('player-turn');
+                redScore.classList.remove('player-turn');
+                blueScore.classList.remove('player-turn');
+                greenScore.classList.remove('player-turn');
+                yellowScore.classList.remove('player-turn');
+                purpleScore.classList.remove('player-turn');
+                orangeScore.classList.remove('player-turn');
+                
+                // 現在のプレイヤーをハイライト
+                const currentPlayer = players[currentPlayerIndex];
+                if (currentPlayer === 'black') {
+                    blackScore.classList.add('player-turn');
+                } else if (currentPlayer === 'white') {
+                    whiteScore.classList.add('player-turn');
+                } else if (currentPlayer === 'red') {
+                    redScore.classList.add('player-turn');
+                } else if (currentPlayer === 'blue') {
+                    blueScore.classList.add('player-turn');
+                } else if (currentPlayer === 'green') {
+                    greenScore.classList.add('player-turn');
+                } else if (currentPlayer === 'yellow') {
+                    yellowScore.classList.add('player-turn');
+                } else if (currentPlayer === 'purple') {
+                    purpleScore.classList.add('player-turn');
+                } else if (currentPlayer === 'orange') {
+                    orangeScore.classList.add('player-turn');
+                }
+            }
+            
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreBlack.textContent = scores.black;
+                scoreWhite.textContent = scores.white;
+                scoreRed.textContent = scores.red;
+                scoreBlue.textContent = scores.blue;
+                scoreGreen.textContent = scores.green;
+                scoreYellow.textContent = scores.yellow;
+                scorePurple.textContent = scores.purple;
+                scoreOrange.textContent = scores.orange;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // リセットボタンのイベント（現在のゲームをリセット）
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント（スコアもリセット）
+            newGameButton.addEventListener('click', () => {
+                scores = { 
+                    black: 0, 
+                    white: 0, 
+                    red: 0, 
+                    blue: 0, 
+                    green: 0,
+                    yellow: 0,
+                    purple: 0,
+                    orange: 0,
+                    draw: 0 
+                };
+                updateScoreBoard();
+                initializeBoard();
+            });
+        });
+    </script>
+</body>
+</html>
