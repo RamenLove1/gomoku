@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コスモスクエア</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #0a0a1a;
+            color: #ffffff;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #8af7ff;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 0 10px #00aeff, 0 0 20px #00aeff;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            background-color: rgba(13, 19, 33, 0.85);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 174, 255, 0.3);
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .player-score {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background-color: rgba(25, 40, 65, 0.7);
+            text-align: center;
+            width: 40%;
+        }
+        .player-name {
+            margin-bottom: 5px;
+            color: #8af7ff;
+        }
+        .player1 {
+            border: 2px solid rgba(255, 92, 141, 0.5);
+            cursor: default;
+            position: relative;
+        }
+        .player2 {
+            border: 2px solid rgba(92, 141, 255, 0.5);
+            cursor: default;
+            position: relative;
+        }
+        .active-player {
+            box-shadow: 0 0 15px rgba(138, 247, 255, 0.7);
+        }
+        .board-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(6, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 6px;
+            background-color: rgba(30, 50, 80, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 140, 255, 0.3);
+            position: relative;
+        }
+        @media (max-width: 500px) {
+            .board {
+                grid-template-columns: repeat(6, 45px);
+                grid-template-rows: repeat(6, 45px);
+            }
+            .cell {
+                width: 45px !important;
+                height: 45px !important;
+            }
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+            background-color: rgba(45, 70, 120, 0.7);
+            border: 2px solid rgba(60, 100, 170, 0.3);
+        }
+        .cell:hover:not(.player1):not(.player2) {
+            box-shadow: 0 0 15px rgba(138, 247, 255, 0.7);
+            transform: scale(1.05);
+        }
+        .point-1 {
+            background: linear-gradient(135deg, #313e6a, #1c2541);
+        }
+        .point-2 {
+            background: linear-gradient(135deg, #3a548c, #243667);
+        }
+        .point-3 {
+            background: linear-gradient(135deg, #4a6cb7, #2d4c9e);
+        }
+        .player1-stone, .player2-stone {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        .player1-stone {
+            background: radial-gradient(circle at 30% 30%, #ff8cb0, #ff5c8d);
+            border: 2px solid #ff3a7c;
+        }
+        .player2-stone {
+            background: radial-gradient(circle at 30% 30%, #8cb0ff, #5c8dff);
+            border: 2px solid #3a7cff;
+        }
+        .connection {
+            position: absolute;
+            height: 4px;
+            background-color: transparent;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 2px;
+            animation: glow 1.5s infinite alternate ease-in-out;
+        }
+        .connection.player1 {
+            background-color: #ff1a66;
+            box-shadow: 0 0 8px #ff1a66, 0 0 12px #ff1a66;
+            border: none;
+        }
+        .connection.player2 {
+            background-color: #1a66ff;
+            box-shadow: 0 0 8px #1a66ff, 0 0 12px #1a66ff;
+            border: none;
+        }
+        .bonus-display {
+            position: absolute;
+            font-size: 14px;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: -10px;
+            right: -10px;
+            z-index: 2;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .bonus-display.player1 {
+            box-shadow: 0 0 8px rgba(255, 26, 102, 0.9);
+            border: 2px solid #ff1a66;
+        }
+        .bonus-display.player2 {
+            box-shadow: 0 0 8px rgba(26, 102, 255, 0.9);
+            border: 2px solid #1a66ff;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3a548c, #243667);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #4a6cb7;
+        }
+        button:hover {
+            background: linear-gradient(180deg, #4a6cb7, #3a548c);
+            box-shadow: 0 0 10px rgba(138, 247, 255, 0.7);
+        }
+        .rules {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(25, 40, 65, 0.7);
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+            max-width: 500px;
+        }
+        .rules h3 {
+            color: #8af7ff;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .disclaimer {
+            margin-top: 15px;
+            text-align: center;
+            color: #7a8599;
+            font-size: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid rgba(138, 247, 255, 0.2);
+        }
+        .flash {
+            animation: flash 0.5s ease-in-out;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes glow {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>コスモスクエア</h1>
+    <div class="game-container">
+        <div class="status" id="status">プレイヤー1の番です</div>
+        <div class="score-board">
+            <div class="player-score player1" id="player1-score">
+                <div class="player-name">プレイヤー1</div>
+                <div id="score-player1">0 ポイント</div>
+            </div>
+            <div class="player-score player2" id="player2-score">
+                <div class="player-name">プレイヤー2</div>
+                <div id="score-player2">0 ポイント</div>
+            </div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="rules-toggle">ルール表示</button>
+        </div>
+        <div class="rules" id="rules-section" style="display: none;">
+            <h3>ゲームのルール</h3>
+            <ul>
+                <li>盤面は6×6のマス目で、各マスには1～3ポイントの値が設定されています。</li>
+                <li>プレイヤーは交互に空いているマスに自分の石を置きます。</li>
+                <li>石を置くと、そのマスの基本ポイントを獲得します。</li>
+                <li>さらに、自分の石の周囲8方向（上下左右斜め）に既に置かれている自分の石の数×1ポイントのボーナスを獲得します。</li>
+                <li>すべてのマスが埋まるか、どちらかのプレイヤーが勝利条件を満たすとゲーム終了です。</li>
+                <li>最終的に最も高いポイントを獲得したプレイヤーが勝利します。</li>
+            </ul>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>©2025 コスモスクエア - 銀河の征服者たちへ</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardSize = 6;
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const rulesToggle = document.getElementById('rules-toggle');
+            const rulesSection = document.getElementById('rules-section');
+            const scorePlayer1 = document.getElementById('score-player1');
+            const scorePlayer2 = document.getElementById('score-player2');
+            const player1ScoreBox = document.getElementById('player1-score');
+            const player2ScoreBox = document.getElementById('player2-score');
+            
+            let gameBoard = [];
+            let cellValues = [];
+            let currentPlayer = 'player1';
+            let gameActive = true;
+            let scores = {
+                player1: 0,
+                player2: 0
+            };
+            let moveCount = 0;
+            let connections = [];
+            
+            // ルール表示切り替え
+            rulesToggle.addEventListener('click', () => {
+                if (rulesSection.style.display === 'none') {
+                    rulesSection.style.display = 'block';
+                    rulesToggle.textContent = 'ルール非表示';
+                } else {
+                    rulesSection.style.display = 'none';
+                    rulesToggle.textContent = 'ルール表示';
+                }
+            });
+            
+            // すべての接続線をクリア
+            function clearConnections() {
+                connections.forEach(conn => {
+                    if (conn && conn.parentNode) {
+                        conn.parentNode.removeChild(conn);
+                    }
+                });
+                connections = [];
+            }
+            
+            // 6x6のボードに1,2,3ポイントのセルをランダムに配置
+            function initializeBoard() {
+                board.innerHTML = '';
+                clearConnections();
+                moveCount = 0;
+                
+                // ゲームボードの初期化
+                gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                
+                // ポイント配列の作成 (各ポイント12個ずつ)
+                let pointValues = [];
+                for (let i = 0; i < 12; i++) pointValues.push(1);
+                for (let i = 0; i < 12; i++) pointValues.push(2);
+                for (let i = 0; i < 12; i++) pointValues.push(3);
+                
+                // ポイント配列をシャッフル
+                pointValues = shuffleArray(pointValues);
+                
+                // セル値の初期化
+                cellValues = Array(boardSize).fill().map(() => Array(boardSize).fill(0));
+                
+                // ボードの作成
+                let valueIndex = 0;
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const value = pointValues[valueIndex++];
+                        cellValues[i][j] = value;
+                        
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell', `point-${value}`);
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        cell.textContent = value;
+                        cell.addEventListener('click', () => handleCellClick(i, j));
+                        board.appendChild(cell);
+                    }
+                }
+                
+                // スコアのリセット
+                scores = { player1: 0, player2: 0 };
+                updateScore();
+                
+                // ゲーム状態の初期化
+                currentPlayer = 'player1';
+                gameActive = true;
+                player1ScoreBox.classList.add('active-player');
+                player2ScoreBox.classList.remove('active-player');
+                updateStatus();
+            }
+            
+            // 配列のシャッフル関数
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // 2点間の接続線を描画する関数
+            function drawConnection(x1, y1, x2, y2, player) {
+                // 2点間の距離と角度を計算
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                
+                // 接続線の要素を作成
+                const connection = document.createElement('div');
+                connection.classList.add('connection', player);
+                
+                // 線の位置と長さを設定
+                connection.style.width = `${distance}px`;
+                connection.style.left = `${x1}px`;
+                connection.style.top = `${y1}px`;
+                connection.style.transformOrigin = '0 50%';
+                connection.style.transform = `rotate(${angle}deg)`;
+                
+                // ボードに追加
+                board.appendChild(connection);
+                
+                // 接続線を追跡するための配列に追加
+                connections.push(connection);
+                
+                return connection;
+            }
+            
+            // セル上の石の中心座標を取得
+            function getStoneCenterPosition(row, col) {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                const cellRect = cell.getBoundingClientRect();
+                const boardRect = board.getBoundingClientRect();
+                
+                return {
+                    x: cellRect.left - boardRect.left + cellRect.width / 2,
+                    y: cellRect.top - boardRect.top + cellRect.height / 2
+                };
+            }
+            
+            // セルクリック時の処理
+            function handleCellClick(row, col) {
+                if (!gameActive || gameBoard[row][col] !== null) {
+                    return;
+                }
+                
+                // セルに石を置く
+                gameBoard[row][col] = currentPlayer;
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add(currentPlayer);
+                
+                // 石を追加
+                const stone = document.createElement('div');
+                stone.classList.add(`${currentPlayer}-stone`);
+                cell.appendChild(stone);
+                
+                // ポイントの計算と加算
+                const basePoints = cellValues[row][col];
+                const adjacentCells = findAdjacentFriendlyStones(row, col);
+                const bonusPoints = adjacentCells.length;
+                const totalPoints = basePoints + bonusPoints;
+                
+                // スコアの更新
+                scores[currentPlayer] += totalPoints;
+                
+                // スコアボードを更新 - プレイヤー切り替え前に表示を更新
+                updateScore();
+                
+                // 接続線の描画
+                drawConnectionsForStone(row, col, adjacentCells);
+                
+                // セルをフラッシュさせる（視覚的効果）
+                cell.classList.add('flash');
+                setTimeout(() => {
+                    cell.classList.remove('flash');
+                }, 500);
+                
+                // 全セルが埋まったかチェック
+                moveCount++;
+                if (moveCount >= boardSize * boardSize) {
+                    endGame();
+                    return;
+                }
+                
+                // プレイヤーの切り替え
+                currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+                player1ScoreBox.classList.toggle('active-player');
+                player2ScoreBox.classList.toggle('active-player');
+                
+                // ステータス更新
+                updateStatus();
+            }
+            
+            // 隣接する味方の石を探す
+            function findAdjacentFriendlyStones(row, col) {
+                const directions = [
+                    [-1, -1], [-1, 0], [-1, 1],
+                    [0, -1],           [0, 1],
+                    [1, -1],  [1, 0],  [1, 1]
+                ];
+                
+                const adjacentCells = [];
+                
+                for (const [dx, dy] of directions) {
+                    const newRow = row + dx;
+                    const newCol = col + dy;
+                    
+                    if (newRow >= 0 && newRow < boardSize && 
+                        newCol >= 0 && newCol < boardSize && 
+                        gameBoard[newRow][newCol] === currentPlayer) {
+                        adjacentCells.push([newRow, newCol]);
+                    }
+                }
+                
+                return adjacentCells;
+            }
+            
+            // 石の接続線を描画する
+            function drawConnectionsForStone(row, col, adjacentCells) {
+                if (adjacentCells.length === 0) return;
+                
+                // 配置された石の中心座標を取得
+                const pos = getStoneCenterPosition(row, col);
+                
+                // 隣接する石それぞれに対して接続線を描画
+                adjacentCells.forEach(([adjRow, adjCol]) => {
+                    const adjPos = getStoneCenterPosition(adjRow, adjCol);
+                    drawConnection(pos.x, pos.y, adjPos.x, adjPos.y, currentPlayer);
+                });
+            }
+            
+            // ボーナスポイントの表示
+            function displayBonusPoints(cell, points) {
+                // ボーナスポイント表示を削除 - この機能は使用しません
+            }
+            
+            // ゲーム終了処理
+            function endGame() {
+                gameActive = false;
+                
+                // 最終スコアを再度確実に更新
+                updateScore();
+                
+                if (scores.player1 > scores.player2) {
+                    status.textContent = `ゲーム終了！ プレイヤー1の勝利です！`;
+                } else if (scores.player2 > scores.player1) {
+                    status.textContent = `ゲーム終了！ プレイヤー2の勝利です！`;
+                } else {
+                    status.textContent = `ゲーム終了！ 引き分けです！`;
+                }
+            }
+            
+            // スコア更新
+            function updateScore() {
+                scorePlayer1.textContent = `${scores.player1} ポイント`;
+                scorePlayer2.textContent = `${scores.player2} ポイント`;
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                if (gameActive) {
+                    status.textContent = `プレイヤー${currentPlayer === 'player1' ? '1' : '2'}の番です`;
+                }
+            }
+            
+            // リセットボタンのイベント
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 初期化
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
