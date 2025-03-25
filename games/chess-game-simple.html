@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シンプルチェス</title>
+    <title>シンプルなチェス</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -37,30 +37,37 @@
         }
         .board-container {
             width: 100%;
-            overflow-x: auto;
             margin-bottom: 10px;
             display: flex;
             justify-content: center;
+            position: relative;
         }
         .board {
             display: grid;
-            grid-template-columns: repeat(8, 60px);
-            grid-template-rows: repeat(8, 60px);
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
             background-color: #BCA888;
             padding: 5px;
             border: 2px solid #8B4513;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             position: relative;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1 / 1;
         }
         .cell {
-            width: 60px;
-            height: 60px;
+            aspect-ratio: 1 / 1;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             position: relative;
-            font-size: 40px;
+            font-size: calc(5vw);
+        }
+        @media (min-width: 500px) {
+            .cell {
+                font-size: 30px;
+            }
         }
         .light {
             background-color: #F3DAB3;
@@ -74,8 +81,8 @@
         .possible-move::after {
             content: "";
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 25%;
+            height: 25%;
             border-radius: 50%;
             background-color: rgba(0, 0, 0, 0.2);
             z-index: 1;
@@ -83,10 +90,11 @@
         .possible-capture::after {
             content: "";
             position: absolute;
-            width: 54px;
-            height: 54px;
+            width: 80%;
+            height: 80%;
             border-radius: 50%;
             border: 3px solid rgba(255, 0, 0, 0.5);
+            box-sizing: border-box;
             z-index: 1;
         }
         .controls {
@@ -119,8 +127,16 @@
             border-radius: 5px;
         }
         .captured-white, .captured-black {
-            font-size: 20px;
-            letter-spacing: 5px;
+            font-size: 16px;
+            letter-spacing: 3px;
+            overflow-wrap: break-word;
+            max-width: 45%;
+        }
+        @media (min-width: 500px) {
+            .captured-white, .captured-black {
+                font-size: 20px;
+                letter-spacing: 5px;
+            }
         }
         .score-board {
             display: flex;
@@ -150,25 +166,34 @@
             justify-content: space-around;
             width: 100%;
             margin: 5px 0;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             color: #666;
         }
         .file-labels {
-            padding: 0 30px;
+            padding: 0 5px;
+            max-width: 400px;
         }
         .rank-labels {
             position: absolute;
             flex-direction: column;
             height: 100%;
-            left: -20px;
+            left: -15px;
             top: 0;
             justify-content: space-around;
+        }
+        @media (min-width: 500px) {
+            .file-labels, .rank-labels {
+                font-size: 14px;
+            }
+            .rank-labels {
+                left: -20px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>シンプルチェス</h1>
+    <h1>チェス</h1>
     <div class="game-container">
         <div class="status" id="status">白の番です</div>
         <div class="score-board">
