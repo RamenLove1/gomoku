@@ -365,6 +365,75 @@
         .yonmoku-dot:nth-child(3) { background-color: red; }
         .yonmoku-dot:nth-child(4) { background-color: blue; }
 
+        /* 超マルチプレイヤー三目並べ */
+        .ultra-sanmoku-card {
+            background: linear-gradient(135deg, #e6f2ff 0%, #c6e2ff 100%);
+            border: 2px solid #5C6BC0;
+            box-shadow: 0 4px 8px rgba(92, 107, 192, 0.3);
+        }
+        .ultra-sanmoku-card .game-title {
+            color: #3F51B5;
+        }
+        .ultra-sanmoku-card .play-button {
+            background-color: #5C6BC0;
+        }
+        .ultra-sanmoku-card .play-button:hover {
+            background-color: #3F51B5;
+        }
+        .ultra-sanmoku-grid {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background-color: rgba(63, 81, 181, 0.2);
+            border-radius: 4px;
+            padding: 3px;
+            z-index: 0;
+        }
+        .ultra-sanmoku-cell {
+            background-color: #f0f8ff;
+            border-radius: 2px;
+            position: relative;
+        }
+        .ultra-sanmoku-cell:nth-child(1)::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: black;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .ultra-sanmoku-cell:nth-child(5)::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: red;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .ultra-sanmoku-cell:nth-child(9)::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: blue;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
         /* 四角並べ */
         .square-connect-card {
             background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
@@ -790,6 +859,26 @@
                         <div class="yonmoku-dot"></div>
                         <div class="yonmoku-dot"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 超マルチプレイヤー三目並べ -->
+            <div class="game-card ultra-sanmoku-card">
+                <div class="game-info">
+                    <h2 class="game-title">超マルチプレイヤー三目並べ</h2>
+                    <p class="game-description">5〜8人で遊べる大人数向け三目並べゲームです。15×15の大きな盤面で、自分の色の石を縦・横・斜めのいずれかに3つ連続で並べた最初のプレイヤーが勝利します。</p>
+                    <a href="games/ultra-multi-player-sanmoku.html" class="play-button">プレイする</a>
+                </div>
+                <div class="ultra-sanmoku-grid">
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
+                    <div class="ultra-sanmoku-cell"></div>
                 </div>
             </div>
 
