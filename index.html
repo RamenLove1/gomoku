@@ -48,6 +48,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .game-card:hover {
             transform: translateY(-5px);
@@ -58,6 +59,7 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
+            z-index: 1;
         }
         .game-title {
             font-size: 1.5rem;
@@ -79,6 +81,7 @@
             transition: background-color 0.3s;
             text-align: center;
             align-self: flex-start;
+            z-index: 2;
         }
         .play-button:hover {
             background-color: #45a049;
@@ -154,6 +157,559 @@
             background: linear-gradient(180deg, #4a6cb7, #3a548c);
             box-shadow: 0 0 15px rgba(138, 247, 255, 0.7);
         }
+        .cosmos-grid {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background-color: rgba(10, 15, 30, 0.6);
+            border-radius: 4px;
+            z-index: 0;
+            padding: 3px;
+            box-shadow: 0 0 10px rgba(138, 247, 255, 0.3);
+        }
+        .cosmos-cell {
+            background-color: rgba(30, 50, 80, 0.7);
+            border-radius: 2px;
+            position: relative;
+            text-align: center;
+            font-size: 10px;
+            color: #8af7ff;
+            text-shadow: 0 0 5px #00aeff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cosmos-stone {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px rgba(138, 247, 255, 0.7);
+        }
+        .cosmos-stone.pink {
+            background: radial-gradient(circle at 30% 30%, #ff8cb0, #ff5c8d);
+        }
+        .cosmos-stone.blue {
+            background: radial-gradient(circle at 30% 30%, #8cb0ff, #5c8dff);
+        }
+
+        /* ゲームカード個別デザイン */
+        /* マルバツゲーム */
+        .tictactoe-card {
+            background: linear-gradient(135deg, #ffffff 0%, #e8f5fe 100%);
+            border: 2px solid #4a90e2;
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+        }
+        .tictactoe-card .game-title {
+            color: #4a90e2;
+        }
+        .tictactoe-card .play-button {
+            background-color: #4a90e2;
+        }
+        .tictactoe-card .play-button:hover {
+            background-color: #3a80d2;
+        }
+        .tictactoe-grid {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 70px;
+            height: 70px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            background-color: rgba(74, 144, 226, 0.2);
+            border-radius: 4px;
+            padding: 3px;
+            opacity: 0.8;
+            z-index: 0;
+        }
+        .tictactoe-cell {
+            background-color: #f0f8ff;
+            border-radius: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .tictactoe-cell.X {
+            color: #ff0000;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(255, 0, 0, 0.5);
+            font-size: 16px;
+        }
+        .tictactoe-cell.O {
+            color: #0066ff;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 102, 255, 0.5);
+            font-size: 16px;
+        }
+
+        /* 五目並べ */
+        .gomoku-card {
+            background: linear-gradient(135deg, #f9e7db 0%, #fff5eb 100%);
+            border: 2px solid #DEB887;
+            box-shadow: 0 4px 8px rgba(222, 184, 135, 0.3);
+        }
+        .gomoku-card .game-title {
+            color: #8B4513;
+        }
+        .gomoku-card .play-button {
+            background-color: #DEB887;
+            color: #8B4513;
+        }
+        .gomoku-card .play-button:hover {
+            background-color: #CDA877;
+        }
+        .gomoku-card::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 70px;
+            height: 70px;
+            background-image: linear-gradient(#8B4513 1px, transparent 1px), 
+                              linear-gradient(90deg, #8B4513 1px, transparent 1px);
+            background-size: 14px 14px;
+            background-position: center;
+            opacity: 0.2;
+            border-radius: 5px;
+            z-index: 0;
+        }
+
+        /* 闇五目並べ */
+        .dark-gomoku-card {
+            background: linear-gradient(135deg, #333333 0%, #222222 100%);
+            border: 2px solid #444;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #f0f0f0;
+        }
+        .dark-gomoku-card .game-title {
+            color: #f0f0f0;
+        }
+        .dark-gomoku-card .game-description {
+            color: #ccc;
+        }
+        .dark-gomoku-card .play-button {
+            background-color: #FF5722;
+        }
+        .dark-gomoku-card .play-button:hover {
+            background-color: #E64A19;
+        }
+        .dark-gomoku-card::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 70px;
+            height: 70px;
+            background-image: linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px);
+            background-size: 14px 14px;
+            background-position: center;
+            opacity: 0.3;
+            border-radius: 5px;
+            z-index: 0;
+        }
+
+        /* マルチプレイヤー4目並べ */
+        .yonmoku-card {
+            background: linear-gradient(135deg, #e6f7ff 0%, #d1edff 100%);
+            border: 2px solid #4FC3F7;
+            box-shadow: 0 4px 8px rgba(79, 195, 247, 0.3);
+        }
+        .yonmoku-card .game-title {
+            color: #0277BD;
+        }
+        .yonmoku-card .play-button {
+            background-color: #4FC3F7;
+            color: #0277BD;
+        }
+        .yonmoku-card .play-button:hover {
+            background-color: #29B6F6;
+        }
+        .yonmoku-dots {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 70px;
+            height: 70px;
+            opacity: 0.2;
+            z-index: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .yonmoku-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .yonmoku-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .yonmoku-dot:nth-child(1) { background-color: black; }
+        .yonmoku-dot:nth-child(2) { background-color: white; border: 1px solid #333; width: 8px; height: 8px; }
+        .yonmoku-dot:nth-child(3) { background-color: red; }
+        .yonmoku-dot:nth-child(4) { background-color: blue; }
+
+        /* 四角並べ */
+        .square-connect-card {
+            background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+            border: 2px solid #FFD54F;
+            box-shadow: 0 4px 8px rgba(255, 213, 79, 0.3);
+        }
+        .square-connect-card .game-title {
+            color: #F57F17;
+        }
+        .square-connect-card .play-button {
+            background-color: #FFD54F;
+            color: #F57F17;
+        }
+        .square-connect-card .play-button:hover {
+            background-color: #FFC107;
+        }
+        .square-connect-card::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(245, 127, 23, 0.3);
+            border-radius: 5px;
+            z-index: 0;
+        }
+        .square-connect-card .corner-dots {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            z-index: 0;
+        }
+        .square-connect-card .corner-dot {
+            width: 8px;
+            height: 8px;
+            background-color: rgba(245, 127, 23, 0.5);
+            border-radius: 50%;
+            position: absolute;
+        }
+        .square-connect-card .corner-dot:nth-child(1) { top: 0; left: 0; }
+        .square-connect-card .corner-dot:nth-child(2) { top: 0; right: 0; }
+        .square-connect-card .corner-dot:nth-child(3) { bottom: 0; left: 0; }
+        .square-connect-card .corner-dot:nth-child(4) { bottom: 0; right: 0; }
+
+        /* マルチプレイヤー四角並べ */
+        .multi-square-connect-card {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e6cfe5 100%);
+            border: 2px solid #BA68C8;
+            box-shadow: 0 4px 8px rgba(186, 104, 200, 0.3);
+        }
+        .multi-square-connect-card .game-title {
+            color: #7B1FA2;
+        }
+        .multi-square-connect-card .play-button {
+            background-color: #BA68C8;
+        }
+        .multi-square-connect-card .play-button:hover {
+            background-color: #AB47BC;
+        }
+        .multi-square-connect-card::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(123, 31, 162, 0.3);
+            border-radius: 5px;
+            z-index: 0;
+        }
+        .multi-square-connect-card .corner-dots {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            z-index: 0;
+        }
+        .multi-square-connect-card .corner-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .multi-square-connect-card .corner-dot:nth-child(1) { top: 0; left: 0; background-color: black; }
+        .multi-square-connect-card .corner-dot:nth-child(2) { top: 0; right: 0; background-color: white; border: 1px solid #333; width: 6px; height: 6px; }
+        .multi-square-connect-card .corner-dot:nth-child(3) { bottom: 0; left: 0; background-color: red; }
+        .multi-square-connect-card .corner-dot:nth-child(4) { bottom: 0; right: 0; background-color: blue; }
+
+        /* オセロ */
+        .othello-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid #66BB6A;
+            box-shadow: 0 4px 8px rgba(102, 187, 106, 0.3);
+        }
+        .othello-card .game-title {
+            color: #2E7D32;
+        }
+        .othello-card .play-button {
+            background-color: #66BB6A;
+        }
+        .othello-card .play-button:hover {
+            background-color: #4CAF50;
+        }
+        .othello-grid {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            background-color: #0a5f2c;
+            border-radius: 4px;
+            z-index: 0;
+        }
+        .othello-cell {
+            background-color: #1E8449;
+            border-radius: 1px;
+            position: relative;
+        }
+        .othello-cell.white-stone::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid #333;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .othello-cell.black-stone::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: black;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* レーザーオセロ */
+        .laser-othello-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #42A5F5;
+            box-shadow: 0 4px 8px rgba(66, 165, 245, 0.3);
+        }
+        .laser-othello-card .game-title {
+            color: #1565C0;
+        }
+        .laser-othello-card .play-button {
+            background-color: #42A5F5;
+        }
+        .laser-othello-card .play-button:hover {
+            background-color: #2196F3;
+        }
+        .laser-othello-grid {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            background-color: #0a5f2c;
+            border-radius: 4px;
+            z-index: 0;
+        }
+        .laser-othello-cell {
+            background-color: #1E8449;
+            border-radius: 1px;
+            position: relative;
+        }
+        .laser-othello-cell.white-stone::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid #333;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .laser-othello-cell.black-stone::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: black;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 3人オセロ */
+        .three-othello-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border: 2px solid #FF9800;
+            box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+        }
+        .three-othello-card .game-title {
+            color: #E65100;
+        }
+        .three-othello-card .play-button {
+            background-color: #FF9800;
+        }
+        .three-othello-card .play-button:hover {
+            background-color: #F57C00;
+        }
+        .three-othello-card .tri-dots {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            z-index: 0;
+        }
+        .three-othello-card .tri-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+        }
+        .three-othello-card .tri-dot:nth-child(1) {
+            top: 27px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: black;
+        }
+        .three-othello-card .tri-dot:nth-child(2) {
+            bottom: 5px;
+            left: 15px;
+            background-color: white;
+            border: 1px solid #333;
+            width: 10px;
+            height: 10px;
+        }
+        .three-othello-card .tri-dot:nth-child(3) {
+            bottom: 5px;
+            right: 15px;
+            background-color: #e74c3c;
+        }
+
+        /* 神経衰弱 */
+        .memory-game-card {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            border: 2px solid #9E9E9E;
+            box-shadow: 0 4px 8px rgba(158, 158, 158, 0.3);
+        }
+        .memory-game-card .game-title {
+            color: #424242;
+        }
+        .memory-game-card .play-button {
+            background-color: #9E9E9E;
+        }
+        .memory-game-card .play-button:hover {
+            background-color: #757575;
+        }
+        .memory-cards {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 70px;
+            height: 70px;
+            z-index: 0;
+        }
+        .memory-card {
+            width: 25px;
+            height: 35px;
+            background-color: #f5f5f5;
+            border: 1px solid #bdbdbd;
+            border-radius: 3px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #616161;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        .memory-card:first-child {
+            bottom: 10px;
+            right: 30px;
+            transform: rotate(-15deg);
+            background-color: #e1f5fe;
+        }
+        .memory-card:nth-child(2) {
+            bottom: 15px;
+            right: 10px;
+            transform: rotate(10deg);
+            background-color: #e8f5e9;
+        }
+
+        /* 目押しじゃんけん */
+        .janken-card {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border: 2px solid #EF5350;
+            box-shadow: 0 4px 8px rgba(239, 83, 80, 0.3);
+        }
+        .janken-card .game-title {
+            color: #C62828;
+        }
+        .janken-card .play-button {
+            background-color: #EF5350;
+        }
+        .janken-card .play-button:hover {
+            background-color: #E53935;
+        }
+        .janken-hands {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+        }
+        .janken-circle {
+            width: 40px;
+            height: 40px;
+            border: 2px dashed rgba(198, 40, 40, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -164,15 +720,28 @@
     
     <main>
         <div class="games-container">
-            <div class="game-card">
+            <!-- マルバツゲーム -->
+            <div class="game-card tictactoe-card">
                 <div class="game-info">
                     <h2 class="game-title">マルバツゲーム</h2>
                     <p class="game-description">3×3のマス目に交互にマルとバツを書き込み、縦・横・斜めに3つ並べると勝ちのシンプルなゲームです。戦略を考えて勝利を目指しましょう。</p>
                     <a href="games/tic-tac-toe.html" class="play-button">プレイする</a>
                 </div>
+                <div class="tictactoe-grid">
+                    <div class="tictactoe-cell X">X</div>
+                    <div class="tictactoe-cell O">O</div>
+                    <div class="tictactoe-cell X">X</div>
+                    <div class="tictactoe-cell X">X</div>
+                    <div class="tictactoe-cell O">O</div>
+                    <div class="tictactoe-cell"></div>
+                    <div class="tictactoe-cell O">O</div>
+                    <div class="tictactoe-cell"></div>
+                    <div class="tictactoe-cell X">X</div>
+                </div>
             </div>
             
-            <div class="game-card">
+            <!-- 五目並べ -->
+            <div class="game-card gomoku-card">
                 <div class="game-info">
                     <h2 class="game-title">五目並べ</h2>
                     <p class="game-description">5つ石を並べて勝利する伝統的な盤ゲームです。交互に石を置いて、縦・横・斜めのいずれかに5つ連続させましょう。</p>
@@ -180,7 +749,8 @@
                 </div>
             </div>
 
-            <div class="game-card">
+            <!-- 闇五目並べ -->
+            <div class="game-card dark-gomoku-card">
                 <div class="game-info">
                     <h2 class="game-title">闇五目並べ</h2>
                     <p class="game-description">通常の五目並べに暗闇の要素を加えたバリエーションです。すべての石は黒く表示され、ゲーム終了後に明るくなって赤と青の色が明かされます。戦略と記憶力が試されます。</p>
@@ -188,75 +758,185 @@
                 </div>
             </div>
 
-            <div class="game-card">
+            <!-- マルチプレイヤー4目並べ -->
+            <div class="game-card yonmoku-card">
                 <div class="game-info">
                     <h2 class="game-title">マルチプレイヤー4目並べ</h2>
                     <p class="game-description">3〜4人で遊べる4目並べゲームです。自分の色の石を縦・横・斜めのいずれかに4つ連続で並べた最初のプレイヤーが勝利します。</p>
                     <a href="games/multi-player-yonmoku.html" class="play-button">プレイする</a>
                 </div>
+                <div class="yonmoku-dots">
+                    <div class="yonmoku-row">
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                    </div>
+                    <div class="yonmoku-row">
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                    </div>
+                    <div class="yonmoku-row">
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                    </div>
+                    <div class="yonmoku-row">
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                        <div class="yonmoku-dot"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="game-card">
+            <!-- 四角並べ -->
+            <div class="game-card square-connect-card">
                 <div class="game-info">
                     <h2 class="game-title">四角並べ</h2>
                     <p class="game-description">2人プレイの戦略ボードゲームです。同じ色の石で縦横の正方形を作ることを目指します。四隅が自分の石で囲まれていれば勝利です！</p>
                     <a href="games/square-connect-game.html" class="play-button">プレイする</a>
                 </div>
+                <div class="corner-dots">
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                </div>
             </div>
 
-            <div class="game-card">
+            <!-- マルチプレイヤー四角並べ -->
+            <div class="game-card multi-square-connect-card">
                 <div class="game-info">
                     <h2 class="game-title">マルチプレイヤー四角並べ</h2>
                     <p class="game-description">3〜4人で遊べる四角並べです。どんな大きさの正方形（斜めも含む）でも、四隅が自分の石で囲まれていれば勝利！戦略性が高く白熱します。</p>
                     <a href="games/multi-player-square-connect.html" class="play-button">プレイする</a>
                 </div>
+                <div class="corner-dots">
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                    <div class="corner-dot"></div>
+                </div>
             </div>
             
-            <div class="game-card">
+            <!-- オセロ -->
+            <div class="game-card othello-card">
                 <div class="game-info">
                     <h2 class="game-title">オセロ</h2>
                     <p class="game-description">盤面の黒と白の石を挟んで相手の石を自分の色に変える戦略ボードゲームです。多くの石を自分の色にして勝利を目指しましょう。</p>
                     <a href="games/othello.html" class="play-button">プレイする</a>
                 </div>
+                <div class="othello-grid">
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell white-stone"></div>
+                    <div class="othello-cell black-stone"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell black-stone"></div>
+                    <div class="othello-cell white-stone"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                    <div class="othello-cell"></div>
+                </div>
             </div>
 
-            <div class="game-card">
+            <!-- レーザーオセロ -->
+            <div class="game-card laser-othello-card">
                 <div class="game-info">
                     <h2 class="game-title">レーザーオセロ</h2>
                     <p class="game-description">通常のオセロをレーザーパワーでアップグレード！相手の石を裏返すと、その方向のすべてのマスが自分の石になります。一気に形勢が逆転する爽快感が味わえます。</p>
                     <a href="games/laser-othello.html" class="play-button">プレイする</a>
                 </div>
+                <div class="laser-othello-grid">
+                    <div class="laser-othello-cell white-stone"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell black-stone"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell white-stone"></div>
+                    <div class="laser-othello-cell black-stone"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell black-stone"></div>
+                    <div class="laser-othello-cell white-stone"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell black-stone"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell white-stone"></div>
+                </div>
             </div>
 
-            <div class="game-card">
+            <!-- 3人オセロ -->
+            <div class="game-card three-othello-card">
                 <div class="game-info">
                     <h2 class="game-title">3人オセロ</h2>
                     <p class="game-description">黒、白、赤の3色の石を使って3人で対戦するオセロです。相手の石を挟んで自分の色に変えながら、最も多くの石を確保して勝利を目指しましょう。</p>
                     <a href="games/othello-three-player.html" class="play-button">プレイする</a>
                 </div>
+                <div class="tri-dots">
+                    <div class="tri-dot"></div>
+                    <div class="tri-dot"></div>
+                    <div class="tri-dot"></div>
+                </div>
             </div>
             
-            <div class="game-card">
+            <!-- 神経衰弱 -->
+            <div class="game-card memory-game-card">
                 <div class="game-info">
                     <h2 class="game-title">神経衰弱</h2>
                     <p class="game-description">カードを2枚ずつめくって同じ絵柄のペアを探す記憶力ゲームです。最も多くのペアを集めたプレイヤーが勝利します。2人から8人まで楽しめます。</p>
                     <a href="games/memory-game.html" class="play-button">プレイする</a>
                 </div>
+                <div class="memory-cards">
+                    <div class="memory-card">🐱</div>
+                    <div class="memory-card">🐶</div>
+                </div>
             </div>
             
-            <div class="game-card">
+            <!-- 目押しじゃんけん -->
+            <div class="game-card janken-card">
                 <div class="game-info">
                     <h2 class="game-title">目押しじゃんけん</h2>
                     <p class="game-description">タイミングを見計らってルーレットを止め、じゃんけんの手を決める新感覚ゲームです。2〜8人で遊べ、最後に残った一人が勝者となります。難易度は4段階から選べます。</p>
                     <a href="games/janken-game.html" class="play-button">プレイする</a>
                 </div>
+                <div class="janken-hands">
+                    <div class="janken-circle">👊</div>
+                </div>
             </div>
 
+            <!-- コスモスクエア -->
             <div class="game-card cosmos-card">
                 <div class="game-info">
                     <h2 class="game-title">コスモスクエア</h2>
                     <p class="game-description">宇宙をテーマにした戦略ボードゲームです。マスに付与されたポイントを獲得し、隣接する石の数だけボーナスを得られます。銀河の征服者になりましょう！</p>
                     <a href="games/cosmos-square.html" class="play-button cosmos-button">プレイする</a>
+                </div>
+                <div class="cosmos-grid">
+                    <div class="cosmos-cell">1</div>
+                    <div class="cosmos-cell">3</div>
+                    <div class="cosmos-cell">1</div>
+                    <div class="cosmos-cell">2</div>
+                    <div class="cosmos-cell pink-stone">
+                        <div class="cosmos-stone pink"></div>
+                    </div>
+                    <div class="cosmos-cell">2</div>
+                    <div class="cosmos-cell">1</div>
+                    <div class="cosmos-cell blue-stone">
+                        <div class="cosmos-stone blue"></div>
+                    </div>
+                    <div class="cosmos-cell">3</div>
                 </div>
             </div>
         </div>
