@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トラップチェス</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            background-color: #BCA888;
+            padding: 5px;
+            border: 2px solid #8B4513;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1 / 1;
+        }
+        .cell {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            font-size: calc(5vw);
+        }
+        @media (min-width: 500px) {
+            .cell {
+                font-size: 30px;
+            }
+        }
+        .light {
+            background-color: #F3DAB3;
+        }
+        .dark {
+            background-color: #D18B47;
+        }
+        .selected {
+            background-color: rgba(255, 255, 0, 0.4);
+        }
+        .possible-move::after {
+            content: "";
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+        .possible-capture::after {
+            content: "";
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 0, 0, 0.5);
+            box-sizing: border-box;
+            z-index: 1;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .captured-pieces {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+        }
+        .captured-white, .captured-black {
+            font-size: 16px;
+            letter-spacing: 3px;
+            overflow-wrap: break-word;
+            max-width: 45%;
+        }
+        @media (min-width: 500px) {
+            .captured-white, .captured-black {
+                font-size: 20px;
+                letter-spacing: 5px;
+            }
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .trap-visible {
+            background-image: radial-gradient(circle, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 70%);
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <h1>シンプルチェス</h1>
+    <div class="game-container">
+        <div class="status" id="status">白の番です</div>
+        <div class="score-board">
+            <div class="score">白: <span id="score-white">0</span></div>
+            <div class="score">黒: <span id="score-black">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
+        <div class="captured-pieces">
+            <div class="captured-white" id="captured-white"></div>
+            <div class="captured-black" id="captured-black"></div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>このページはAIによって生成されたものです</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreDraw = document.getElementById('score-draw');
+            const capturedWhite = document.getElementById('captured-white');
+            const capturedBlack = document.getElementById('captured-black');
+            
+            // チェスのUnicode文字
+            const pieces = {
+                white: {
+                    king: '♔',
+                    queen: '♕',
+                    rook: '♖',
+                    bishop: '♗',
+                    knight: '♘',
+                    pawn: '♙'
+                },
+                black: {
+                    king: '♚',
+                    queen: '♛',
+                    rook: '♜',
+                    bishop: '♝',
+                    knight: '♞',
+                    pawn: '♟'
+                }
+            };
+            
+            // ゲームの状態
+            let gameBoard = [];
+            let currentPlayer = 'white';
+            let selectedPiece = null;
+            let possibleMoves = [];
+            let capturedPieces = { white: [], black: [] };
+            let kings = { white: null, black: null };
+            let gameActive = true;
+            let traps = [];
+            let visibleTraps = [];
+            let scores = {
+                white: 0,
+                black: 0,
+                draw: 0
+            };
+            
+            // ゲームボードの初期化
+            function initializeBoard() {
+                board.innerHTML = '';
+                gameBoard = Array(8).fill().map(() => Array(8).fill(null));
+                currentPlayer = 'white';
+                selectedPiece = null;
+                possibleMoves = [];
+                capturedPieces = { white: [], black: [] };
+                kings = { white: null, black: null };
+                gameActive = true;
+                // 落とし穴をリセット
+                traps = [];
+                visibleTraps = [];
+
+                // 各中央行（2, 3, 4, 5行目）にランダムに落とし穴を設置
+                for (let row = 2; row <= 5; row++) {
+                    const col = Math.floor(Math.random() * 8);
+                    traps.push({ row, col });
+                }
+                
+                // 駒を配置
+                setupPieces();
+                
+                // 盤面を描画
+                drawBoard();
+                
+                // ステータスを更新
+                updateStatus();
+                updateCapturedPieces();
+            }
+            
+            // 駒の初期配置
+            function setupPieces() {
+                // ポーン
+                for (let col = 0; col < 8; col++) {
+                    gameBoard[1][col] = { type: 'pawn', color: 'black' };
+                    gameBoard[6][col] = { type: 'pawn', color: 'white' };
+                }
+                
+                // ルーク
+                gameBoard[0][0] = { type: 'rook', color: 'black' };
+                gameBoard[0][7] = { type: 'rook', color: 'black' };
+                gameBoard[7][0] = { type: 'rook', color: 'white' };
+                gameBoard[7][7] = { type: 'rook', color: 'white' };
+                
+                // ナイト
+                gameBoard[0][1] = { type: 'knight', color: 'black' };
+                gameBoard[0][6] = { type: 'knight', color: 'black' };
+                gameBoard[7][1] = { type: 'knight', color: 'white' };
+                gameBoard[7][6] = { type: 'knight', color: 'white' };
+                
+                // ビショップ
+                gameBoard[0][2] = { type: 'bishop', color: 'black' };
+                gameBoard[0][5] = { type: 'bishop', color: 'black' };
+                gameBoard[7][2] = { type: 'bishop', color: 'white' };
+                gameBoard[7][5] = { type: 'bishop', color: 'white' };
+                
+                // クイーン
+                gameBoard[0][3] = { type: 'queen', color: 'black' };
+                gameBoard[7][3] = { type: 'queen', color: 'white' };
+                
+                // キング
+                gameBoard[0][4] = { type: 'king', color: 'black' };
+                gameBoard[7][4] = { type: 'king', color: 'white' };
+                
+                // キングの位置を記録
+                kings.black = { row: 0, col: 4 };
+                kings.white = { row: 7, col: 4 };
+            }
+            
+            // 盤面を描画
+            function drawBoard() {
+                board.innerHTML = '';
+                
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+
+                        // 落とし穴が見えている場合、スタイルを適用
+                        const trapIndex = visibleTraps.findIndex(trap => 
+                            trap.row === row && trap.col === col);
+                        if (trapIndex !== -1) {
+                            cell.classList.add('trap-visible');
+                        }
+                        
+                        // 白黒の市松模様
+                        if ((row + col) % 2 === 0) {
+                            cell.classList.add('light');
+                        } else {
+                            cell.classList.add('dark');
+                        }
+                        
+                        // データ属性
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // 選択した駒をハイライト
+                        if (selectedPiece && row === selectedPiece.row && col === selectedPiece.col) {
+                            cell.classList.add('selected');
+                        }
+                        
+                        // 可能な移動先をマーク
+                        const moveIndex = possibleMoves.findIndex(move => 
+                            move.row === row && move.col === col);
+                        if (moveIndex !== -1) {
+                            const move = possibleMoves[moveIndex];
+                            if (move.capture) {
+                                cell.classList.add('possible-capture');
+                            } else {
+                                cell.classList.add('possible-move');
+                            }
+                        }
+                        
+                        // 駒を表示
+                        const piece = gameBoard[row][col];
+                        if (piece) {
+                            cell.textContent = pieces[piece.color][piece.type];
+                        }
+                        
+                        // クリックイベント
+                        cell.addEventListener('click', function() {
+                            handleCellClick(parseInt(this.dataset.row), parseInt(this.dataset.col));
+                        });
+                        
+                        board.appendChild(cell);
+                    }
+                }
+            }
+            
+            // 駒を選択または移動
+            function handleCellClick(row, col) {
+                if (!gameActive) return;
+                
+                // すでに駒が選択されていて、移動先を選んだ場合
+                if (selectedPiece) {
+                    const moveIndex = possibleMoves.findIndex(move => 
+                        move.row === row && move.col === col);
+                    
+                    if (moveIndex !== -1) {
+                        // 移動を実行
+                        const move = possibleMoves[moveIndex];
+                        executeMove(move);
+                    } else {
+                        // 別の駒を選択し直す
+                        selectPiece(row, col);
+                    }
+                } else {
+                    // 駒を新しく選択
+                    selectPiece(row, col);
+                }
+            }
+            
+            // 駒を選択
+            function selectPiece(row, col) {
+                const piece = gameBoard[row][col];
+                
+                // 自分の駒を選択した場合
+                if (piece && piece.color === currentPlayer) {
+                    selectedPiece = { row, col, type: piece.type, color: piece.color };
+                    generatePossibleMoves(row, col);
+                } else {
+                    // 空のマスまたは相手の駒を選択した場合
+                    selectedPiece = null;
+                    possibleMoves = [];
+                }
+                
+                drawBoard();
+            }
+            
+            // 可能な移動先を生成（簡易版）
+            function generatePossibleMoves(row, col) {
+                possibleMoves = [];
+                const piece = gameBoard[row][col];
+                
+                if (!piece) return;
+                
+                // 簡易版のルールで移動可能なマスを生成
+                switch (piece.type) {
+                    case 'pawn':
+                        generatePawnMoves(row, col, piece.color);
+                        break;
+                    case 'knight':
+                        generateKnightMoves(row, col, piece.color);
+                        break;
+                    case 'bishop':
+                        generateBishopMoves(row, col, piece.color);
+                        break;
+                    case 'rook':
+                        generateRookMoves(row, col, piece.color);
+                        break;
+                    case 'queen':
+                        generateQueenMoves(row, col, piece.color);
+                        break;
+                    case 'king':
+                        generateKingMoves(row, col, piece.color);
+                        break;
+                }
+            }
+            
+            // ポーンの移動
+            function generatePawnMoves(row, col, color) {
+                const direction = color === 'white' ? -1 : 1;
+                const startingRow = color === 'white' ? 6 : 1;
+                
+                // 前方への移動
+                if (row + direction >= 0 && row + direction < 8) {
+                    if (!gameBoard[row + direction][col]) {
+                        possibleMoves.push({ row: row + direction, col: col, capture: false });
+                        
+                        // 初期位置からの2マス移動
+                        if (row === startingRow && !gameBoard[row + 2 * direction][col]) {
+                            possibleMoves.push({ row: row + 2 * direction, col: col, capture: false });
+                        }
+                    }
+                    
+                    // 斜めへの駒取り
+                    for (let colDiff of [-1, 1]) {
+                        const newCol = col + colDiff;
+                        if (newCol >= 0 && newCol < 8) {
+                            if (gameBoard[row + direction][newCol] && 
+                                gameBoard[row + direction][newCol].color !== color) {
+                                possibleMoves.push({ 
+                                    row: row + direction, 
+                                    col: newCol, 
+                                    capture: true 
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // ナイトの移動
+            function generateKnightMoves(row, col, color) {
+                const moves = [
+                    { row: row - 2, col: col - 1 },
+                    { row: row - 2, col: col + 1 },
+                    { row: row - 1, col: col - 2 },
+                    { row: row - 1, col: col + 2 },
+                    { row: row + 1, col: col - 2 },
+                    { row: row + 1, col: col + 2 },
+                    { row: row + 2, col: col - 1 },
+                    { row: row + 2, col: col + 1 }
+                ];
+                
+                for (const move of moves) {
+                    if (move.row >= 0 && move.row < 8 && move.col >= 0 && move.col < 8) {
+                        if (!gameBoard[move.row][move.col]) {
+                            possibleMoves.push({ row: move.row, col: move.col, capture: false });
+                        } else if (gameBoard[move.row][move.col].color !== color) {
+                            possibleMoves.push({ row: move.row, col: move.col, capture: true });
+                        }
+                    }
+                }
+            }
+            
+            // ビショップの移動
+            function generateBishopMoves(row, col, color) {
+                const directions = [
+                    { row: -1, col: -1 }, // 左上
+                    { row: -1, col: 1 },  // 右上
+                    { row: 1, col: -1 },  // 左下
+                    { row: 1, col: 1 }    // 右下
+                ];
+                
+                for (const direction of directions) {
+                    let currentRow = row + direction.row;
+                    let currentCol = col + direction.col;
+                    
+                    while (currentRow >= 0 && currentRow < 8 && currentCol >= 0 && currentCol < 8) {
+                        if (!gameBoard[currentRow][currentCol]) {
+                            possibleMoves.push({ row: currentRow, col: currentCol, capture: false });
+                        } else {
+                            if (gameBoard[currentRow][currentCol].color !== color) {
+                                possibleMoves.push({ row: currentRow, col: currentCol, capture: true });
+                            }
+                            break; // 駒に当たったら、その方向の探索を終了
+                        }
+                        
+                        currentRow += direction.row;
+                        currentCol += direction.col;
+                    }
+                }
+            }
+            
+            // ルークの移動
+            function generateRookMoves(row, col, color) {
+                const directions = [
+                    { row: -1, col: 0 }, // 上
+                    { row: 1, col: 0 },  // 下
+                    { row: 0, col: -1 }, // 左
+                    { row: 0, col: 1 }   // 右
+                ];
+                
+                for (const direction of directions) {
+                    let currentRow = row + direction.row;
+                    let currentCol = col + direction.col;
+                    
+                    while (currentRow >= 0 && currentRow < 8 && currentCol >= 0 && currentCol < 8) {
+                        if (!gameBoard[currentRow][currentCol]) {
+                            possibleMoves.push({ row: currentRow, col: currentCol, capture: false });
+                        } else {
+                            if (gameBoard[currentRow][currentCol].color !== color) {
+                                possibleMoves.push({ row: currentRow, col: currentCol, capture: true });
+                            }
+                            break; // 駒に当たったら、その方向の探索を終了
+                        }
+                        
+                        currentRow += direction.row;
+                        currentCol += direction.col;
+                    }
+                }
+            }
+            
+            // クイーンの移動
+            function generateQueenMoves(row, col, color) {
+                // ビショップとルークの動きを組み合わせる
+                generateBishopMoves(row, col, color);
+                generateRookMoves(row, col, color);
+            }
+            
+            // キングの移動
+            function generateKingMoves(row, col, color) {
+                const directions = [
+                    { row: -1, col: -1 }, // 左上
+                    { row: -1, col: 0 },  // 上
+                    { row: -1, col: 1 },  // 右上
+                    { row: 0, col: -1 },  // 左
+                    { row: 0, col: 1 },   // 右
+                    { row: 1, col: -1 },  // 左下
+                    { row: 1, col: 0 },   // 下
+                    { row: 1, col: 1 }    // 右下
+                ];
+                
+                for (const direction of directions) {
+                    const newRow = row + direction.row;
+                    const newCol = col + direction.col;
+                    
+                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                        if (!gameBoard[newRow][newCol]) {
+                            possibleMoves.push({ row: newRow, col: newCol, capture: false });
+                        } else if (gameBoard[newRow][newCol].color !== color) {
+                            possibleMoves.push({ row: newRow, col: newCol, capture: true });
+                        }
+                    }
+                }
+            }
+            
+            // 駒の移動
+            function executeMove(move) {
+                const fromRow = selectedPiece.row;
+                const fromCol = selectedPiece.col;
+                const toRow = move.row;
+                const toCol = move.col;
+                const piece = gameBoard[fromRow][fromCol];
+                
+                // 駒を取る場合
+                let isKingCaptured = false;
+                if (move.capture) {
+                    const capturedPiece = gameBoard[toRow][toCol];
+                    capturedPieces[capturedPiece.color].push(capturedPiece.type);
+                    
+                    // キングを取った場合
+                    if (capturedPiece.type === 'king') {
+                        isKingCaptured = true;
+                    }
+                }
+
+                // 移動先が落とし穴かどうかチェック
+                const trapIndex = traps.findIndex(trap => 
+                    trap.row === toRow && trap.col === toCol);
+                const isTrap = trapIndex !== -1;
+    
+                // 落とし穴に踏み込んだ場合
+                if (isTrap && visibleTraps.findIndex(trap => 
+                    trap.row === toRow && trap.col === toCol) === -1) {
+                    // 落とし穴を見えるようにする
+                    visibleTraps.push(traps[trapIndex]);
+    
+                    // 駒は消滅する（移動しない）
+                    gameBoard[fromRow][fromCol] = null;
+      
+                    // キングが落とし穴に落ちた場合
+                    if (piece.type === 'king') {
+                        const winner = currentPlayer === 'white' ? 'black' : 'white';
+                        status.textContent = `${winner === 'white' ? '白' : '黒'}の勝ちです！キングが落とし穴に落ちました！`;
+                        scores[winner]++;
+                        updateScoreBoard();
+                        gameActive = false;
+                    } else {
+                        // プレイヤー交代
+                        currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+                        updateStatus();
+                    }
+                } else {
+                    // 通常の移動処理（既存のコード）
+                    // 駒を移動
+                    gameBoard[toRow][toCol] = piece;
+                    gameBoard[fromRow][fromCol] = null;
+                } 
+                
+                // キングの場合、位置を更新
+                if (piece.type === 'king') {
+                    kings[piece.color] = { row: toRow, col: toCol };
+                }
+                
+                // ポーンが最後の行に到達した場合、クイーンに昇格（簡易版）
+                if (piece.type === 'pawn' && (toRow === 0 || toRow === 7)) {
+                    piece.type = 'queen';
+                }
+                
+                // 選択状態をリセット
+                selectedPiece = null;
+                possibleMoves = [];
+                
+                // キングを取った場合は勝利判定
+                if (isKingCaptured) {
+                    const winner = currentPlayer;
+                    status.textContent = `${winner === 'white' ? '白' : '黒'}の勝ちです！`;
+                    scores[winner]++;
+                    updateScoreBoard();
+                    gameActive = false;
+                } else {
+                    // プレイヤー交代
+                    currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+                    updateStatus();
+                }
+                
+                // UI更新
+                drawBoard();
+                updateCapturedPieces();
+            }
+            
+            // 捕獲された駒を更新
+            function updateCapturedPieces() {
+                capturedWhite.textContent = capturedPieces.white.map(type => pieces.black[type]).join(' ');
+                capturedBlack.textContent = capturedPieces.black.map(type => pieces.white[type]).join(' ');
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                status.textContent = `${currentPlayer === 'white' ? '白' : '黒'}の番です`;
+            }
+            
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreWhite.textContent = scores.white;
+                scoreBlack.textContent = scores.black;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // リセットボタンのイベント
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント
+            newGameButton.addEventListener('click', () => {
+                scores = { white: 0, black: 0, draw: 0 };
+                updateScoreBoard();
+                initializeBoard();
+            });
+            
+            // 初期化
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
