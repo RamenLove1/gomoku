@@ -35,6 +35,22 @@
             font-weight: bold;
             text-align: center;
         }
+        
+        /* アニメーション中に盤面上にオーバーレイを表示 */
+        .board-container.animating {
+            position: relative;
+        }
+        .board-container.animating::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+            z-index: 10;
+            cursor: not-allowed;
+        }
         .board-container {
             width: 100%;
             margin-bottom: 10px;
@@ -84,9 +100,99 @@
             border-radius: 50%;
             background-color: rgba(255, 255, 255, 0.3);
         }
+        
+        /* Enhanced Laser Path Effects */
         .cell.laser-path {
-            background-color: rgba(255, 255, 0, 0.2);
+            background-color: rgba(0, 200, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            animation: laserPulse 0.8s infinite alternate; /* 1.5s → 0.8s */
         }
+        
+        .cell.laser-path::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 300%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(0, 200, 255, 0) 0%, 
+                rgba(0, 200, 255, 0.8) 50%, 
+                rgba(0, 200, 255, 0) 100%);
+            animation: laserBeam 0.5s ease-out; /* 1s → 0.5s */
+            z-index: 3;
+        }
+        
+        @keyframes laserPulse {
+            0% {
+                box-shadow: inset 0 0 8px rgba(0, 200, 255, 0.3);
+            }
+            100% {
+                box-shadow: inset 0 0 20px rgba(0, 200, 255, 0.8);
+            }
+        }
+        
+        @keyframes laserBeam {
+            0% {
+                left: -100%;
+                opacity: 0.8;
+            }
+            100% {
+                left: 100%;
+                opacity: 0;
+            }
+        }
+        
+        /* Special effect for newly placed discs that emit lasers */
+        .cell.black.laser-source::before,
+        .cell.white.laser-source::before {
+            box-shadow: 0 0 20px 8px #00c8ff, 0 0 30px 12px rgba(0, 200, 255, 0.8), 0 0 40px 5px rgba(0, 173, 238, 0.6);
+            animation: laserGlow 0.8s infinite alternate; /* 1.5s → 0.8s */
+        }
+        
+        @keyframes laserGlow {
+            from {
+                box-shadow: 0 0 20px 8px #00c8ff, 0 0 30px 12px rgba(0, 200, 255, 0.8), 0 0 40px 5px rgba(0, 173, 238, 0.6);
+            }
+            to {
+                box-shadow: 0 0 25px 10px #00c8ff, 0 0 35px 15px rgba(0, 200, 255, 0.9), 0 0 45px 8px rgba(0, 173, 238, 0.7);
+            }
+        }
+        
+        /* Flipping effect enhanced */
+        .cell.laser-flip {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .cell.laser-flip::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.8) 0%, rgba(0, 200, 255, 0) 70%);
+            z-index: 2;
+            animation: laserFlipGlow 0.4s ease-out; /* 0.8s → 0.4s */
+        }
+        
+        @keyframes laserFlipGlow {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+        
         .cell::before {
             content: "";
             position: absolute;
@@ -171,6 +277,45 @@
             background-color: white;
             border: 1px solid #333;
         }
+        
+        /* Rules modal styles (from poison-othello) */
+        .rules-button {
+            margin-top: 10px;
+            background-color: #3498db;
+        }
+        .rules-button:hover {
+            background-color: #2980b9;
+        }
+        .rules-modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .rules-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -199,6 +344,19 @@
             <button id="reset-button">リセット</button>
             <button id="new-game-button">新しいゲーム</button>
         </div>
+        <button id="rules-button" class="rules-button">ルール説明</button>
+        <div id="rules-modal" class="rules-modal">
+            <div class="rules-content">
+                <span class="close">&times;</span>
+                <h2>レーザーオセロのルール</h2>
+                <ul>
+                    <li>通常のオセロと同じように、挟んだ石を自分の色に変えます。</li>
+                    <li>ただし普通のオセロと違い、挟んだ相手の石だけでなく、その方向に連続している全てのマスが自分の色に変わります。</li>
+                    <li>相手の石があった場所は通常の石に、空のマスには新しい石が置かれます。</li>
+                    <li>このレーザー効果により、一度に多くの石を変えることができるため、劇的な逆転が起こりやすいゲームです。</li>
+                </ul>
+            </div>
+        </div>
         <div class="disclaimer">
             <p>このゲームは娯楽目的のみで提供されています</p>
             <p>このページはAIによって生成されたものです</p>
@@ -217,10 +375,14 @@
             const scoreDraw = document.getElementById('score-draw');
             const blackCount = document.getElementById('black-count');
             const whiteCount = document.getElementById('white-count');
+            const rulesButton = document.getElementById('rules-button');
+            const rulesModal = document.getElementById('rules-modal');
+            const closeButton = document.querySelector('.close');
             
             let gameBoard = [];
             let currentPlayer = 'black';
             let gameActive = true;
+            let animationInProgress = false; // アニメーション進行中かどうかのフラグ
             let scores = {
                 black: 0,
                 white: 0,
@@ -238,6 +400,7 @@
             function initializeBoard() {
                 board.innerHTML = '';
                 gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                animationInProgress = false; // アニメーションフラグをリセット
                 
                 // 初期配置
                 gameBoard[3][3] = 'white';
@@ -373,35 +536,75 @@
                             c += dc;
                         }
                         
-                        flippedPaths.push(path);
+                        flippedPaths.push({path, direction: [dr, dc]});
                     }
                 }
                 
-                // アニメーション表示
-                for (const path of flippedPaths) {
-                    for (const [r, c] of path) {
-                        const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
-                        
-                        // アニメーション効果
-                        if (cell.classList.contains(opponent)) {
-                            cell.classList.add('flipped');
+                // アニメーション表示 - 強化版
+                if (flippedPaths.length > 0) {
+                    // 置いた石をレーザーソースとしてマーク
+                    const sourceCell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    sourceCell.classList.add('laser-source');
                 
-                            // アニメーション完了後に色を切り替える
-                            setTimeout(() => {
-                                cell.classList.remove(opponent, 'flipped');
-                                cell.classList.add(player);
-                            }, 150);
-                        } else if (!cell.classList.contains(player)) {
-                            // 空のセルだった場合
-                            cell.classList.add('laser-path');
+                    // 少し遅延してレーザー効果を順番に表示
+                    setTimeout(() => {
+                        flippedPaths.forEach((pathInfo, pathIndex) => {
+                            const {path, direction} = pathInfo;
+                            const [dr, dc] = direction;
                             
-                            // アニメーション効果
+                            // パスごとに少しずつ遅延を増やす
                             setTimeout(() => {
-                                cell.classList.remove('laser-path');
-                                cell.classList.add(player);
-                            }, 150);
-                        }
-                    }
+                                // 各パスの遅延を計算するための変数
+                                let cellDelay = 0;
+                                const cellDelayIncrement = 25; // 50ms → 25ms - 各セルの遅延増分
+                
+                                path.forEach((cellCoord, index) => {
+                                    const [r, c] = cellCoord;
+                                    const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                                    
+                                    // 遅延を設定して順番にアニメーション
+                                    setTimeout(() => {
+                                        // レーザーパスエフェクトを追加
+                                        cell.classList.add('laser-path');
+                                        
+                                        // 元の色を取得
+                                        const originalClass = cell.classList.contains(opponent) ? opponent : '';
+                                        
+                                        // アニメーション効果
+                                        if (originalClass) {
+                                            cell.classList.add('laser-flip');
+                                            cell.classList.add('flipped');
+                                            
+                                            // アニメーション完了後に色を切り替える
+                                            setTimeout(() => {
+                                                cell.classList.remove(opponent, 'flipped');
+                                                cell.classList.add(player);
+                                                
+                                                // レーザーエフェクトを一定時間後に消す
+                                                setTimeout(() => {
+                                                    cell.classList.remove('laser-path', 'laser-flip');
+                                                }, 250); // 500ms → 250ms
+                                            }, 80); // 150ms → 80ms
+                                        } else {
+                                            // 空のセルだった場合
+                                            setTimeout(() => {
+                                                cell.classList.remove('laser-path');
+                                                cell.classList.add(player);
+                                            }, 80); // 150ms → 80ms
+                                        }
+                                    }, cellDelay);
+                                    
+                                    // 次のセルの遅延を増やす
+                                    cellDelay += cellDelayIncrement;
+                                });
+                            }, pathIndex * 50); // 100ms → 50ms - パスごとの遅延
+                        });
+                    }, 150); // 300ms → 150ms
+                    
+                    // レーザーソースのエフェクトを一定時間後に消す
+                    setTimeout(() => {
+                        sourceCell.classList.remove('laser-source');
+                    }, 800); // 2000ms → 800ms
                 }
                 
                 return flippedPaths.length > 0;
@@ -409,7 +612,8 @@
             
             // セルクリック時の処理
             function handleCellClick(row, col) {
-                if (!gameActive || !isValidMove(row, col, currentPlayer)) {
+                // アニメーション中や無効な手の場合は何もしない
+                if (!gameActive || animationInProgress || !isValidMove(row, col, currentPlayer)) {
                     return;
                 }
                 
@@ -421,11 +625,27 @@
                 cell.classList.remove('valid-move');
                 cell.classList.add(currentPlayer);
                 
+                // アニメーション開始フラグを設定
+                animationInProgress = true;
+                
+                // アニメーション中の視覚的フィードバックを追加
+                const boardContainer = document.querySelector('.board-container');
+                boardContainer.classList.add('animating');
+                
                 // 相手の石を裏返す（レーザーモード）
                 flipDiscs(row, col, currentPlayer);
                 
-                // 次のターンの準備
-                checkGameStatus();
+                // 次のターンの準備 - エフェクトの後に実行するため遅延
+                setTimeout(() => {
+                    // アニメーション終了フラグを設定
+                    animationInProgress = false;
+                    
+                    // アニメーション中の視覚的フィードバックを削除
+                    const boardContainer = document.querySelector('.board-container');
+                    boardContainer.classList.remove('animating');
+                    
+                    checkGameStatus();
+                }, 1000); // 2000ms → 1000ms
             }
             
             // ゲームの状態をチェックし次のプレイヤーに移行
@@ -499,6 +719,12 @@
             
             // 盤面の状態を更新
             function updateBoard() {
+                // すべてのレーザー効果をクリア
+                const cells = document.querySelectorAll('.cell');
+                cells.forEach(cell => {
+                    cell.classList.remove('laser-path', 'laser-source', 'laser-flip');
+                });
+                
                 // ゲームがアクティブでない場合、valid-moveを表示しない
                 if (!gameActive) {
                     clearValidMoves();
@@ -509,7 +735,7 @@
                 for (let i = 0; i < boardSize; i++) {
                     for (let j = 0; j < boardSize; j++) {
                         const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
-                        cell.classList.remove('black', 'white', 'valid-move', 'laser-path');
+                        cell.classList.remove('black', 'white', 'valid-move');
                         
                         if (gameBoard[i][j]) {
                             cell.classList.add(gameBoard[i][j]);
@@ -569,7 +795,11 @@
             
             // ステータス更新
             function updateStatus() {
-                status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
+                if (animationInProgress) {
+                    status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}のターン - エフェクト中...`;
+                } else {
+                    status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
+                }
             }
             
             // スコアボード更新
@@ -579,11 +809,35 @@
                 scoreDraw.textContent = scores.draw;
             }
             
+            // ルールモーダルの表示・非表示
+            rulesButton.addEventListener('click', () => {
+                rulesModal.style.display = "block";
+                // モーダル表示中はクリックできないようにする必要はないが、
+                // 念のためanimationInProgressをfalseにしておく
+                animationInProgress = false;
+            });
+            
+            closeButton.addEventListener('click', () => {
+                rulesModal.style.display = "none";
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === rulesModal) {
+                    rulesModal.style.display = "none";
+                }
+            });
+            
             // リセットボタンのイベント（現在のゲームをリセット）
-            resetButton.addEventListener('click', initializeBoard);
+            resetButton.addEventListener('click', () => {
+                // アニメーション中でも強制的にリセット可能に
+                animationInProgress = false;
+                initializeBoard();
+            });
             
             // 新しいゲームボタンのイベント（スコアもリセット）
             newGameButton.addEventListener('click', () => {
+                // アニメーション中でも強制的に新しいゲーム開始可能に
+                animationInProgress = false;
                 scores = { black: 0, white: 0, draw: 0 };
                 updateScoreBoard();
                 initializeBoard();
