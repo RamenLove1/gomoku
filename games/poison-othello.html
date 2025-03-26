@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポイズンオセロ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        .status {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .board-container {
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 0;
+            background-color: #1E8449;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 500px) {
+            .board {
+                grid-template-columns: repeat(8, 35px);
+                grid-template-rows: repeat(8, 35px);
+            }
+            .cell {
+                width: 35px !important;
+                height: 35px !important;
+            }
+            .cell::before {
+                width: 30px !important;
+                height: 30px !important;
+            }
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            box-sizing: border-box;
+            border: 1px solid #186A3B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell.valid-move::after {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .cell::before {
+            content: "";
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.3s;
+        }
+        .cell.black::before {
+            background-color: black;
+            opacity: 1;
+        }
+        .cell.white::before {
+            background-color: white;
+            opacity: 1;
+        }
+        .cell.black.poison::before {
+            background-color: black;
+            box-shadow: 0 0 20px 8px #8e44ad, 0 0 30px 12px rgba(155, 89, 182, 0.8), 0 0 40px 5px rgba(142, 68, 173, 0.6);
+            opacity: 1;
+            animation: glow 1.5s infinite alternate;
+        }
+        .cell.white.poison::before {
+            background-color: white;
+            box-shadow: 0 0 20px 8px #8e44ad, 0 0 30px 12px rgba(155, 89, 182, 0.8), 0 0 40px 5px rgba(142, 68, 173, 0.6);
+            opacity: 1;
+            animation: glow 1.5s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 20px 8px #8e44ad, 0 0 30px 12px rgba(155, 89, 182, 0.8), 0 0 40px 5px rgba(142, 68, 173, 0.6);
+            }
+            to {
+                box-shadow: 0 0 25px 10px #8e44ad, 0 0 35px 15px rgba(155, 89, 182, 0.9), 0 0 45px 8px rgba(142, 68, 173, 0.7);
+            }
+        }
+        .cell.flipped::before {
+            transform: rotateY(180deg);
+        }
+        .cell.poison-effect {
+            background-color: rgba(155, 89, 182, 0.3);
+            animation: poisonPulse 0.8s ease-in-out;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cell.poison-effect::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle, rgba(155, 89, 182, 0.8) 0%, rgba(155, 89, 182, 0) 70%);
+            z-index: 2;
+            animation: poisonGlow 0.8s ease-in-out;
+        }
+        
+        @keyframes poisonPulse {
+            0% {
+                background-color: rgba(155, 89, 182, 0);
+                box-shadow: inset 0 0 5px rgba(155, 89, 182, 0);
+            }
+            50% {
+                background-color: rgba(155, 89, 182, 0.7);
+                box-shadow: inset 0 0 20px rgba(155, 89, 182, 1);
+            }
+            100% {
+                background-color: rgba(155, 89, 182, 0.4);
+                box-shadow: inset 0 0 10px rgba(155, 89, 182, 0.6);
+            }
+        }
+        
+        @keyframes poisonGlow {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .score {
+            padding: 5px 15px;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+        .disc-count {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .disc {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .disc-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .black-icon {
+            background-color: black;
+        }
+        .white-icon {
+            background-color: white;
+            border: 1px solid #333;
+        }
+        .rules-button {
+            margin-top: 10px;
+            background-color: #3498db;
+        }
+        .rules-button:hover {
+            background-color: #2980b9;
+        }
+        .rules-modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .rules-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>ポイズンオセロ</h1>
+    <div class="game-container">
+        <div class="status" id="status">黒の番です</div>
+        <div class="disc-count">
+            <div class="disc">
+                <div class="disc-icon black-icon"></div>
+                <span id="black-count">2</span>
+            </div>
+            <div class="disc">
+                <div class="disc-icon white-icon"></div>
+                <span id="white-count">2</span>
+            </div>
+        </div>
+        <div class="score-board">
+            <div class="score">黒: <span id="score-black">0</span></div>
+            <div class="score">白: <span id="score-white">0</span></div>
+            <div class="score">引分: <span id="score-draw">0</span></div>
+        </div>
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        <div class="controls">
+            <button id="reset-button">リセット</button>
+            <button id="new-game-button">新しいゲーム</button>
+        </div>
+        <button id="rules-button" class="rules-button">ルール説明</button>
+        <div id="rules-modal" class="rules-modal">
+            <div class="rules-content">
+                <span class="close">&times;</span>
+                <h2>ポイズンオセロのルール</h2>
+                <ul>
+                    <li>通常のオセロと同じように、挟んだ石を自分の色に変えます。</li>
+                    <li>自分が置いた石は「毒石」になります（紫色に光り、点滅します）。</li>
+                    <li>自分のターンの初めに、毒石に上下左右で隣接するマス（石のないマスも含む）が毒石と同じ色の石になります。</li>
+                    <li>毒石によって変化した石は、毒石にはなりません。</li>
+                    <li>毒石がほかの色に変わるとき、毒石ではなくなります。</li>
+                </ul>
+            </div>
+        </div>
+        <div class="disclaimer">
+            <p>このゲームは娯楽目的のみで提供されています</p>
+            <p>このページはAIによって生成されたものです</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boardSize = 8;
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetButton = document.getElementById('reset-button');
+            const newGameButton = document.getElementById('new-game-button');
+            const scoreBlack = document.getElementById('score-black');
+            const scoreWhite = document.getElementById('score-white');
+            const scoreDraw = document.getElementById('score-draw');
+            const blackCount = document.getElementById('black-count');
+            const whiteCount = document.getElementById('white-count');
+            const rulesButton = document.getElementById('rules-button');
+            const rulesModal = document.getElementById('rules-modal');
+            const closeButton = document.querySelector('.close');
+            
+            let gameBoard = [];
+            let poisonBoard = []; // 毒石の位置を記録する配列
+            let currentPlayer = 'black';
+            let gameActive = true;
+            let scores = {
+                black: 0,
+                white: 0,
+                draw: 0
+            };
+            
+            // 方向の定義 (8方向)
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            // ゲームボードの初期化
+            function initializeBoard() {
+                board.innerHTML = '';
+                gameBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(null));
+                poisonBoard = Array(boardSize).fill().map(() => Array(boardSize).fill(false));
+                
+                // 初期配置
+                gameBoard[3][3] = 'white';
+                gameBoard[3][4] = 'black';
+                gameBoard[4][3] = 'black';
+                gameBoard[4][4] = 'white';
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        
+                        // セルクリックのイベントハンドラー
+                        cell.addEventListener('click', function() {
+                            // データ属性から行と列を取得
+                            const row = parseInt(this.dataset.row);
+                            const col = parseInt(this.dataset.col);
+                            handleCellClick(row, col);
+                        });
+                        
+                        board.appendChild(cell);
+                        
+                        // 初期配置の石を表示
+                        if (gameBoard[i][j]) {
+                            cell.classList.add(gameBoard[i][j]);
+                        }
+                    }
+                }
+                
+                currentPlayer = 'black';
+                gameActive = true;
+                updateBoard();
+                updateStatus();
+            }
+            
+            // 有効な手を取得
+            function getValidMoves(player) {
+                const validMoves = [];
+                
+                for (let row = 0; row < boardSize; row++) {
+                    for (let col = 0; col < boardSize; col++) {
+                        if (gameBoard[row][col] !== null) continue;
+                        
+                        if (isValidMove(row, col, player)) {
+                            validMoves.push([row, col]);
+                        }
+                    }
+                }
+                
+                return validMoves;
+            }
+            
+            // 有効な手かどうかをチェック
+            function isValidMove(row, col, player) {
+                if (gameBoard[row][col] !== null) return false;
+                
+                const opponent = player === 'black' ? 'white' : 'black';
+                
+                for (const [dr, dc] of directions) {
+                    let r = row + dr;
+                    let c = col + dc;
+                    let foundOpponent = false;
+                    
+                    while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                        if (gameBoard[r][c] === null) break;
+                        if (gameBoard[r][c] === opponent) {
+                            foundOpponent = true;
+                        } else if (gameBoard[r][c] === player && foundOpponent) {
+                            return true;
+                        } else {
+                            break;
+                        }
+                        
+                        r += dr;
+                        c += dc;
+                    }
+                }
+                
+                return false;
+            }
+            
+            // 石を返す
+            function flipDiscs(row, col, player) {
+                const opponent = player === 'black' ? 'white' : 'black';
+                const flippedDiscs = [];
+    
+                for (const [dr, dc] of directions) {
+                    let r = row + dr;
+                    let c = col + dc;
+                    const discsToFlip = [];
+        
+                    while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                        if (gameBoard[r][c] === null) break;
+                        if (gameBoard[r][c] === opponent) {
+                            discsToFlip.push([r, c]);
+                        } else if (gameBoard[r][c] === player && discsToFlip.length > 0) {
+                            flippedDiscs.push(...discsToFlip);
+                            break;
+                        } else {
+                            break;
+                        }
+            
+                        r += dr;
+                        c += dc;
+                    }
+                }
+    
+                for (const [r, c] of flippedDiscs) {
+                    gameBoard[r][c] = player;
+                    
+                    // 毒石でなくなる
+                    if (poisonBoard[r][c]) {
+                        poisonBoard[r][c] = false;
+                    }
+                    
+                    const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    
+                    // アニメーション
+                    cell.classList.add('flipped');
+                    
+                    // アニメーション完了後に色を切り替える
+                    setTimeout(() => {
+                        cell.classList.remove(opponent, 'flipped', 'poison');
+                        cell.classList.add(player);
+                    }, 150); // 回転アニメーションの半分の時間で色を切り替え
+                }
+                
+                return flippedDiscs.length > 0;
+            }
+            
+            // 毒の効果を適用する
+            function applyPoisonEffect(player) {
+                const affectedCells = [];
+                
+                // 毒石を探して隣接するセルに影響を与える
+                for (let row = 0; row < boardSize; row++) {
+                    for (let col = 0; col < boardSize; col++) {
+                        if (gameBoard[row][col] === player && poisonBoard[row][col]) {
+                            // 隣接する4方向のセルのみに影響
+                            const adjacentDirections = [
+                                [-1, 0], // 上
+                                [0, -1], // 左
+                                [0, 1],  // 右
+                                [1, 0]   // 下
+                            ];
+                            
+                            for (const [dr, dc] of adjacentDirections) {
+                                const newRow = row + dr;
+                                const newCol = col + dc;
+                                
+                                // ボード内かチェック
+                                if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                                    // 空のセルか相手の色の石があるセル
+                                    if (gameBoard[newRow][newCol] === null || gameBoard[newRow][newCol] !== player) {
+                                        // 同じセルを重複して処理しないようにチェック
+                                        if (!affectedCells.some(cell => cell[0] === newRow && cell[1] === newCol)) {
+                                            affectedCells.push([newRow, newCol]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 変更されたセルをアニメーションで表示し、更新する
+                for (const [row, col] of affectedCells) {
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add('poison-effect');
+                    
+                    // 毒のエフェクト音を鳴らす（オプション）
+                    // const poisonSound = new Audio('poison-sound.mp3');
+                    // poisonSound.play();
+                    
+                    // アニメーション完了後に更新
+                    setTimeout(() => {
+                        // 石がなかった場合は新しく石を追加
+                        if (gameBoard[row][col] === null) {
+                            gameBoard[row][col] = player;
+                            cell.classList.remove('poison-effect');
+                            cell.classList.add(player);
+                        } 
+                        // 相手の色の石があった場合は色を変更
+                        else if (gameBoard[row][col] !== player) {
+                            // 毒石だった場合は毒効果を失う
+                            if (poisonBoard[row][col]) {
+                                poisonBoard[row][col] = false;
+                            }
+                            
+                            gameBoard[row][col] = player;
+                            cell.classList.remove('white', 'black', 'poison', 'poison-effect');
+                            cell.classList.add(player);
+                        }
+                    }, 800); // アニメーション時間と合わせる
+                }
+                
+                // アニメーション完了を待つため少し遅延
+                return affectedCells.length > 0 ? 900 : 0;
+            }
+            
+            // セルクリック時の処理
+            function handleCellClick(row, col) {
+                if (!gameActive || !isValidMove(row, col, currentPlayer)) {
+                    return;
+                }
+                
+                // 盤面の状態を更新
+                gameBoard[row][col] = currentPlayer;
+                
+                // 置いた石を毒石に設定
+                poisonBoard[row][col] = true;
+                
+                // DOM更新
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.remove('valid-move');
+                cell.classList.add(currentPlayer, 'poison');
+                
+                // 相手の石を裏返す
+                flipDiscs(row, col, currentPlayer);
+                
+                // 次のターンの準備
+                checkGameStatus();
+            }
+            
+            // ゲームの状態をチェックし次のプレイヤーに移行
+            function checkGameStatus() {
+                // 盤面の状態を更新して最新状態を確認
+                updateBoard();
+                
+                // ゲーム終了チェック - 盤面が全て埋まっているか確認
+                if (isGameOver()) {
+                    endGame();
+                    return;
+                }
+                
+                // プレイヤー交代
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                
+                // 毒の効果を適用
+                const delay = applyPoisonEffect(currentPlayer);
+                
+                // 有効な手があるかチェック（少し遅延）
+                setTimeout(() => {
+                    // 毒効果適用後に再度ゲーム終了をチェック
+                    if (isGameOver()) {
+                        endGame();
+                        return;
+                    }
+                    
+                    const validMoves = getValidMoves(currentPlayer);
+                    if (validMoves.length === 0) {
+                        // パスの処理
+                        const nextPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                        status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}に有効な手がないため、パスします`;
+                        
+                        // 次のプレイヤーに
+                        currentPlayer = nextPlayer;
+                        
+                        // 次のプレイヤーも有効な手がなければゲーム終了
+                        if (getValidMoves(currentPlayer).length === 0) {
+                            endGame();
+                            return;
+                        }
+                        
+                        // 少し待ってからステータスを更新
+                        setTimeout(() => {
+                            // 新しいプレイヤーの毒効果を適用
+                            const newDelay = applyPoisonEffect(currentPlayer);
+                            
+                            // 効果適用後に盤面を更新
+                            setTimeout(() => {
+                                // 毒効果適用後に再度ゲーム終了をチェック
+                                if (isGameOver()) {
+                                    endGame();
+                                    return;
+                                }
+                                
+                                updateStatus();
+                                updateBoard();
+                            }, newDelay);
+                        }, 1000);
+                    } else {
+                        updateStatus();
+                        updateBoard();
+                    }
+                }, delay);
+            }
+            
+            // ゲーム終了処理
+            function endGame() {
+                gameActive = false;
+                const blackDiscs = countDiscs('black');
+                const whiteDiscs = countDiscs('white');
+                
+                if (blackDiscs > whiteDiscs) {
+                    status.textContent = `黒の勝ちです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.black++;
+                } else if (whiteDiscs > blackDiscs) {
+                    status.textContent = `白の勝ちです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.white++;
+                } else {
+                    status.textContent = `引き分けです！ (黒: ${blackDiscs}, 白: ${whiteDiscs})`;
+                    scores.draw++;
+                }
+                
+                updateScoreBoard();
+            }
+            
+            // 盤面の状態を更新
+            function updateBoard() {
+                // すべての石を正しく表示
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                        cell.classList.remove('black', 'white', 'valid-move', 'poison', 'poison-effect');
+                        
+                        if (gameBoard[i][j]) {
+                            cell.classList.add(gameBoard[i][j]);
+                            
+                            // 毒石の表示
+                            if (poisonBoard[i][j]) {
+                                cell.classList.add('poison');
+                            }
+                        }
+                    }
+                }
+                
+                // 現在のプレイヤーの有効な手を表示
+                const validMoves = getValidMoves(currentPlayer);
+                for (const [row, col] of validMoves) {
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    cell.classList.add('valid-move');
+                }
+                
+                // 石の数を更新
+                updateDiscCount();
+            }
+            
+            // 石の数を数える
+            function countDiscs(player) {
+                let count = 0;
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === player) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+            
+            // 石の数を更新
+            function updateDiscCount() {
+                blackCount.textContent = countDiscs('black');
+                whiteCount.textContent = countDiscs('white');
+            }
+            
+            // ゲーム終了判定
+            function isGameOver() {
+                // 空きマスがない場合
+                let hasEmpty = false;
+                for (let i = 0; i < boardSize && !hasEmpty; i++) {
+                    for (let j = 0; j < boardSize && !hasEmpty; j++) {
+                        if (gameBoard[i][j] === null) {
+                            hasEmpty = true;
+                        }
+                    }
+                }
+                
+                if (!hasEmpty) return true;
+                
+                // 両プレイヤーとも置けない場合
+                return getValidMoves('black').length === 0 && getValidMoves('white').length === 0;
+            }
+            
+            // ステータス更新
+            function updateStatus() {
+                status.textContent = `${currentPlayer === 'black' ? '黒' : '白'}の番です`;
+            }
+            
+            // スコアボード更新
+            function updateScoreBoard() {
+                scoreBlack.textContent = scores.black;
+                scoreWhite.textContent = scores.white;
+                scoreDraw.textContent = scores.draw;
+            }
+            
+            // ルールモーダルの表示・非表示
+            rulesButton.addEventListener('click', () => {
+                rulesModal.style.display = "block";
+            });
+            
+            closeButton.addEventListener('click', () => {
+                rulesModal.style.display = "none";
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === rulesModal) {
+                    rulesModal.style.display = "none";
+                }
+            });
+            
+            // リセットボタンのイベント（現在のゲームをリセット）
+            resetButton.addEventListener('click', initializeBoard);
+            
+            // 新しいゲームボタンのイベント（スコアもリセット）
+            newGameButton.addEventListener('click', () => {
+                scores = { black: 0, white: 0, draw: 0 };
+                updateScoreBoard();
+                initializeBoard();
+            });
+            
+            // 初期化
+            initializeBoard();
+        });
+    </script>
+</body>
+</html>
