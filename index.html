@@ -476,10 +476,10 @@
             border-radius: 50%;
             position: absolute;
         }
-        .square-connect-card .corner-dot:nth-child(1) { top: 0; left: 0; }
-        .square-connect-card .corner-dot:nth-child(2) { top: 0; right: 0; }
-        .square-connect-card .corner-dot:nth-child(3) { bottom: 0; left: 0; }
-        .square-connect-card .corner-dot:nth-child(4) { bottom: 0; right: 0; }
+        .square-connect-card .corner-dot:nth-child(1) { top: -1px; left: -1px; }
+        .square-connect-card .corner-dot:nth-child(2) { top: -1px; right: 1px; }
+        .square-connect-card .corner-dot:nth-child(3) { bottom: 1px; left: -1px; }
+        .square-connect-card .corner-dot:nth-child(4) { bottom: 1px; right: 1px; }
 
         /* マルチプレイヤー四角並べ */
         .multi-square-connect-card {
@@ -521,10 +521,10 @@
             border-radius: 50%;
             position: absolute;
         }
-        .multi-square-connect-card .corner-dot:nth-child(1) { top: 0; left: 0; background-color: black; }
-        .multi-square-connect-card .corner-dot:nth-child(2) { top: 0; right: 0; background-color: white; border: 1px solid #333; width: 6px; height: 6px; }
-        .multi-square-connect-card .corner-dot:nth-child(3) { bottom: 0; left: 0; background-color: red; }
-        .multi-square-connect-card .corner-dot:nth-child(4) { bottom: 0; right: 0; background-color: blue; }
+        .multi-square-connect-card .corner-dot:nth-child(1) { top: -1px; left: -1px; background-color: black; }
+        .multi-square-connect-card .corner-dot:nth-child(2) { top: -1px; right: 1px; background-color: white; border: 1px solid #333; width: 6px; height: 6px; }
+        .multi-square-connect-card .corner-dot:nth-child(3) { bottom: 1px; left: -1px; background-color: red; }
+        .multi-square-connect-card .corner-dot:nth-child(4) { bottom: 1px; right: 1px; background-color: blue; }
 
         /* オセロ */
         .othello-card {
@@ -879,6 +879,51 @@
             opacity: 0.7;
             z-index: 0;
         }
+
+        /* トラップチェス */
+        .trap-chess-card {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border: 2px solid #d32f2f;
+            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.3);
+        }
+        .trap-chess-card .game-title {
+            color: #b71c1c;
+        }
+        .trap-chess-card .play-button {
+            background-color: #d32f2f;
+        }
+        .trap-chess-card .play-button:hover {
+            background-color: #c62828;
+        }
+        .trap-chess-card .chess-icon-container {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 60px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 0;
+        }
+        .trap-chess-card .pit-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 25px;
+            height: 25px;
+            background-color: #222;
+            opacity: 0.7;
+            z-index: 1;
+        }
+        .trap-chess-card .chess-icon {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            font-size: 30px;
+            color: #b71c1c;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
@@ -1140,6 +1185,19 @@
                     <a href="games/chess-game-simple.html" class="play-button">プレイする</a>
                 </div>
                 <div class="chess-icon">♙</div>
+            </div>
+
+            <!-- トラップチェス -->
+            <div class="game-card trap-chess-card">
+                <div class="game-info">
+                    <h2 class="game-title">トラップチェス</h2>
+                    <p class="game-description">チェスに危険な要素を加えたバリエーションです。中央の4列に隠された落とし穴に注意！コマが落とし穴に落ちると消え、見えるようになります。キングが落ちると即座に敗北するので、戦略的に相手を誘導しましょう。</p>
+                    <a href="games/trap-chess-game.html" class="play-button">プレイする</a>
+                </div>
+                <div class="chess-icon-container">
+                    <div class="pit-icon"></div>
+                    <div class="chess-icon">♙</div>
+                </div>
             </div>
 
             <!-- コスモスクエア -->
