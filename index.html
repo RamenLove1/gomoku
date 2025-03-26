@@ -584,7 +584,7 @@
             transform: translate(-50%, -50%);
         }
 
-        /* レーザーオセロ */
+        /* レーザーオセロ - 更新したCSS */
         .laser-othello-card {
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             border: 2px solid #42A5F5;
@@ -640,6 +640,56 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+
+        /* レーザーエフェクトの追加 */
+        .laser-othello-cell.laser-source::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: black;
+            box-shadow: 0 0 8px 3px #00c8ff, 0 0 12px 5px rgba(0, 200, 255, 0.7);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: laserSourceGlow 1.5s infinite alternate;
+        }
+
+        @keyframes laserSourceGlow {
+            from {
+                box-shadow: 0 0 8px 3px #00c8ff, 0 0 12px 5px rgba(0, 200, 255, 0.7);
+            }
+            to {
+                box-shadow: 0 0 12px 5px #00c8ff, 0 0 20px 8px rgba(0, 200, 255, 0.9);
+            }
+        }
+
+        /* レーザービームエフェクト */
+        .laser-othello-cell.laser-path {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .laser-othello-cell.laser-path::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 200, 255, 0.15);
+            animation: laserPathPulse 1.5s infinite alternate;
+        }
+
+        @keyframes laserPathPulse {
+            from {
+                opacity: 0.2;
+            }
+            to {
+                opacity: 0.5;
+            }
         }
 
         /* ポイズンオセロ */
@@ -1084,7 +1134,7 @@
                 </div>
             </div>
 
-            <!-- レーザーオセロ -->
+            <!-- レーザーオセロ - 更新したHTML -->
             <div class="game-card laser-othello-card">
                 <div class="game-info">
                     <h2 class="game-title">レーザーオセロ</h2>
@@ -1093,12 +1143,12 @@
                 </div>
                 <div class="laser-othello-grid">
                     <div class="laser-othello-cell white-stone"></div>
-                    <div class="laser-othello-cell"></div>
-                    <div class="laser-othello-cell"></div>
+                    <div class="laser-othello-cell laser-path"></div>
+                    <div class="laser-othello-cell laser-path"></div>
                     <div class="laser-othello-cell black-stone"></div>
                     <div class="laser-othello-cell"></div>
                     <div class="laser-othello-cell white-stone"></div>
-                    <div class="laser-othello-cell black-stone"></div>
+                    <div class="laser-othello-cell laser-source"></div>
                     <div class="laser-othello-cell"></div>
                     <div class="laser-othello-cell"></div>
                     <div class="laser-othello-cell black-stone"></div>
