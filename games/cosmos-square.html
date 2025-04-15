@@ -3,7 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>コスモスクエア</title>
+    <title>コスモスクエア with AI</title>
+    <!-- ONNX Runtime CDNのバージョンを指定して明示的にロード -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.15.1/dist/ort.min.js"></script>
+    <!-- ONNX Runtimeの読み込み確認 -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (typeof ort === 'undefined') {
+                    console.error('ONNX Runtimeが読み込まれていません。');
+                    document.getElementById('onnx-status').textContent = 'ONNX Runtimeの読み込みに失敗しました。ゲームは基本戦略のみで動作します。';
+                } else {
+                    console.log('ONNX Runtimeが正常に読み込まれました。バージョン:', ort.version);
+                    document.getElementById('onnx-status').textContent = 'ONNX Runtimeが正常に読み込まれました。';
+                }
+            } catch (e) {
+                console.error('ONNX Runtime初期化エラー:', e);
+                document.getElementById('onnx-status').textContent = 'ONNX Runtimeの初期化に失敗しました。ゲームは基本戦略のみで動作します。';
+            }
+        });
+    </script>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -204,6 +223,7 @@
         .controls {
             margin-top: 20px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
         }
@@ -236,6 +256,57 @@
             margin-top: 0;
             margin-bottom: 10px;
         }
+        .game-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .mode-button {
+            background-color: rgba(25, 40, 65, 0.7);
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+        .mode-button.active {
+            background-color: rgba(25, 80, 120, 0.9);
+            box-shadow: 0 0 10px rgba(138, 247, 255, 0.7);
+        }
+        .thinking {
+            animation: pulse 1.5s infinite;
+        }
+        .ai-level-select {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .ai-level-select label {
+            margin-bottom: 5px;
+            color: #8af7ff;
+        }
+        .ai-level-select select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: rgba(25, 40, 65, 0.7);
+            color: white;
+            border: 1px solid #4a6cb7;
+        }
+        .file-selector {
+            margin: 10px 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        .file-selector.visible {
+            display: flex;
+        }
+        .status-message {
+            color: #aaffaa;
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 20px;
+        }
         .disclaimer {
             margin-top: 15px;
             text-align: center;
@@ -257,19 +328,46 @@
             0% { opacity: 0.7; }
             100% { opacity: 1; }
         }
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body>
-    <h1>コスモスクエア</h1>
+    <h1>コスモスクエア with AI</h1>
     <div class="game-container">
+        <div id="onnx-status" style="text-align: center; color: #aaffaa; margin-bottom: 10px; font-size: 14px;">
+            ONNX Runtimeのステータスを確認中...
+        </div>
+        <div class="game-mode">
+            <button id="mode-pvp" class="mode-button active">プレイヤー対プレイヤー</button>
+            <button id="mode-pvc" class="mode-button">プレイヤー対AI</button>
+            <button id="mode-cvp" class="mode-button">AI対プレイヤー</button>
+        </div>
+        
+        <div class="ai-level-select">
+            <label for="ai-level">AIレベル:</label>
+            <select id="ai-level">
+                <option value="random">ランダム</option>
+                <option value="basic">簡単</option>
+                <option value="advanced" selected>標準</option>
+            </select>
+        </div>
+        
+        <div class="file-selector" id="file-selector" style="display: none;">
+            <div class="status-message" id="model-status">AIモデルの読み込み状態...</div>
+        </div>
+        
         <div class="status" id="status">プレイヤー1の番です</div>
         <div class="score-board">
             <div class="player-score player1" id="player1-score">
-                <div class="player-name">プレイヤー1</div>
+                <div class="player-name" id="player1-name">プレイヤー1</div>
                 <div id="score-player1">0 ポイント</div>
             </div>
             <div class="player-score player2" id="player2-score">
-                <div class="player-name">プレイヤー2</div>
+                <div class="player-name" id="player2-name">プレイヤー2</div>
                 <div id="score-player2">0 ポイント</div>
             </div>
         </div>
@@ -279,6 +377,7 @@
         <div class="controls">
             <button id="reset-button">リセット</button>
             <button id="rules-toggle">ルール表示</button>
+            <button id="ai-model-status">AIモデル状態</button>
         </div>
         <div class="rules" id="rules-section" style="display: none;">
             <h3>ゲームのルール</h3>
@@ -287,13 +386,12 @@
                 <li>プレイヤーは交互に空いているマスに自分の石を置きます。</li>
                 <li>石を置くと、そのマスの基本ポイントを獲得します。</li>
                 <li>さらに、自分の石の周囲8方向（上下左右斜め）に既に置かれている自分の石の数×1ポイントのボーナスを獲得します。</li>
-                <li>すべてのマスが埋まるか、どちらかのプレイヤーが勝利条件を満たすとゲーム終了です。</li>
+                <li>すべてのマスが埋まるとゲーム終了です。</li>
                 <li>最終的に最も高いポイントを獲得したプレイヤーが勝利します。</li>
             </ul>
         </div>
         <div class="disclaimer">
             <p>このゲームは娯楽目的のみで提供されています</p>
-            <p>このページはAIによって生成されたものです</p>
         </div>
     </div>
 
@@ -309,7 +407,21 @@
             const scorePlayer2 = document.getElementById('score-player2');
             const player1ScoreBox = document.getElementById('player1-score');
             const player2ScoreBox = document.getElementById('player2-score');
+            const player1Name = document.getElementById('player1-name');
+            const player2Name = document.getElementById('player2-name');
+            const modePvP = document.getElementById('mode-pvp');
+            const modePvC = document.getElementById('mode-pvc');
+            const modeCvP = document.getElementById('mode-cvp');
+            const aiLevel = document.getElementById('ai-level');
+            const modelStatus = document.getElementById('model-status');
+            const fileSelector = document.getElementById('file-selector');
+            const aiModelStatusBtn = document.getElementById('ai-model-status');
             
+            // ONNXモデルのパスを設定
+            const ONNX_MODEL_PATH = 'models/cosmos_dqn.onnx'; // 実際のパスに合わせて調整
+            
+            // ゲーム設定
+            let gameMode = 'pvp'; // pvp: Player vs Player, pvc: Player vs Computer, cvp: Computer vs Player
             let gameBoard = [];
             let cellValues = [];
             let currentPlayer = 'player1';
@@ -320,6 +432,141 @@
             };
             let moveCount = 0;
             let connections = [];
+            let aiThinking = false;
+            
+            // AIモデル
+            let onnxModel = null;
+            let onnxSession = null;
+            let usingOnnxModel = false;
+            let isModelLoading = false;
+            
+            // AIモデル状態ボタンのイベント
+            aiModelStatusBtn.addEventListener('click', () => {
+                if (isModelLoading) {
+                    modelStatus.textContent = 'モデルを読み込み中です...しばらくお待ちください';
+                    return;
+                }
+                
+                if (usingOnnxModel) {
+                    modelStatus.textContent = 'AIモデルは正常に読み込まれています';
+                } else {
+                    // モデルが読み込まれていなければ読み込みを試行
+                    loadOnnxModel();
+                }
+                
+                // モデルステータスを表示
+                fileSelector.style.display = 'block';
+                
+                // 3秒後に非表示にする
+                setTimeout(() => {
+                    fileSelector.style.display = 'none';
+                }, 3000);
+            });
+            
+            // ONNXモデルを自動的に読み込む関数
+            async function loadOnnxModel() {
+                // ONNX Runtimeが利用可能かチェック
+                if (typeof ort === 'undefined') {
+                    console.error('ONNX Runtimeが読み込まれていません');
+                    modelStatus.textContent = 'ONNX Runtimeが読み込まれていないため、モデルを使用できません。ページを再読み込みしてください。';
+                    return;
+                }
+                
+                if (isModelLoading) return;
+                isModelLoading = true;
+                modelStatus.textContent = 'モデルを読み込んでいます...';
+                
+                try {
+                    console.log('ONNXモデルを読み込みます:', ONNX_MODEL_PATH);
+                    
+                    // Fetch APIを使ってONNXファイルを取得
+                    const response = await fetch(ONNX_MODEL_PATH);
+                    
+                    if (!response.ok) {
+                        throw new Error(`モデルの取得に失敗しました: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    // ArrayBufferとして読み込む
+                    const arrayBuffer = await response.arrayBuffer();
+                    
+                    // モデルをメモリに保存
+                    onnxModel = new Uint8Array(arrayBuffer);
+                    
+                    // ONNXランタイムの設定とセッションの作成
+                    const options = {
+                        executionProviders: ['wasm'],
+                        graphOptimizationLevel: 'all'
+                    };
+                    
+                    try {
+                        // 既存のセッションを閉じる
+                        if (onnxSession) {
+                            await onnxSession.release();
+                        }
+                        
+                        console.log('ONNXセッションを作成します...');
+                        // 新しいセッションを作成
+                        onnxSession = await ort.InferenceSession.create(onnxModel, options);
+                        console.log('ONNXセッションが作成されました');
+                        
+                        // モデルの入出力名を確認
+                        const inputNames = onnxSession.inputNames;
+                        const outputNames = onnxSession.outputNames;
+                        console.log('モデル入力名:', inputNames);
+                        console.log('モデル出力名:', outputNames);
+                        
+                        usingOnnxModel = true;
+                        modelStatus.textContent = 'モデルの読み込みが完了しました！';
+                        aiModelStatusBtn.textContent = 'AIモデル読み込み済み';
+                    } catch (err) {
+                        console.error('ONNXセッション作成エラー:', err);
+                        modelStatus.textContent = 'モデルの読み込みに失敗しました: ' + err.message;
+                        usingOnnxModel = false;
+                        aiModelStatusBtn.textContent = 'AIモデル読み込み再試行';
+                    }
+                } catch (err) {
+                    console.error('ファイル読み込みエラー:', err);
+                    modelStatus.textContent = 'ファイルの読み込みに失敗しました: ' + err.message;
+                    aiModelStatusBtn.textContent = 'AIモデル読み込み再試行';
+                } finally {
+                    isModelLoading = false;
+                }
+            }
+            
+            // ゲームモード切り替え
+            modePvP.addEventListener('click', () => changeGameMode('pvp'));
+            modePvC.addEventListener('click', () => changeGameMode('pvc'));
+            modeCvP.addEventListener('click', () => changeGameMode('cvp'));
+            
+            // ゲームモードを変更する
+            function changeGameMode(mode) {
+                gameMode = mode;
+                
+                // ボタンのアクティブ状態を更新
+                modePvP.classList.toggle('active', mode === 'pvp');
+                modePvC.classList.toggle('active', mode === 'pvc');
+                modeCvP.classList.toggle('active', mode === 'cvp');
+                
+                // プレイヤー名を更新
+                updatePlayerNames();
+                
+                // ゲームをリセット
+                initializeBoard();
+            }
+            
+            // プレイヤー名を更新
+            function updatePlayerNames() {
+                if (gameMode === 'pvp') {
+                    player1Name.textContent = 'プレイヤー1';
+                    player2Name.textContent = 'プレイヤー2';
+                } else if (gameMode === 'pvc') {
+                    player1Name.textContent = 'プレイヤー';
+                    player2Name.textContent = 'AI';
+                } else if (gameMode === 'cvp') {
+                    player1Name.textContent = 'AI';
+                    player2Name.textContent = 'プレイヤー';
+                }
+            }
             
             // ルール表示切り替え
             rulesToggle.addEventListener('click', () => {
@@ -390,6 +637,11 @@
                 player1ScoreBox.classList.add('active-player');
                 player2ScoreBox.classList.remove('active-player');
                 updateStatus();
+                
+                // AIが先手の場合は自動的に打つ
+                if (gameActive && gameMode === 'cvp' && currentPlayer === 'player1') {
+                    setTimeout(makeAIMove, 500);
+                }
             }
             
             // 配列のシャッフル関数
@@ -443,10 +695,42 @@
             
             // セルクリック時の処理
             function handleCellClick(row, col) {
+                // AI思考中は操作を受け付けない
+                if (aiThinking) return;
+                
+                // ゲーム終了・セルが既に埋まっている場合は何もしない
                 if (!gameActive || gameBoard[row][col] !== null) {
                     return;
                 }
                 
+                // PvCモードで、AI（プレイヤー2）の番の場合は何もしない
+                if (gameMode === 'pvc' && currentPlayer === 'player2') {
+                    return;
+                }
+                
+                // CvPモードで、AI（プレイヤー1）の番の場合は何もしない
+                if (gameMode === 'cvp' && currentPlayer === 'player1') {
+                    return;
+                }
+                
+                // 石を置く
+                placeStone(row, col);
+                
+                // AIの番になった場合、少し遅延してから手を打つ
+                if (gameActive) {
+                    if ((gameMode === 'pvc' && currentPlayer === 'player2') || 
+                        (gameMode === 'cvp' && currentPlayer === 'player1')) {
+                        aiThinking = true;
+                        status.classList.add('thinking');
+                        status.textContent = 'AIが考え中...';
+                        
+                        setTimeout(makeAIMove, 1000);
+                    }
+                }
+            }
+            
+            // 石を置く処理（プレイヤーとAI共通）
+            function placeStone(row, col) {
                 // セルに石を置く
                 gameBoard[row][col] = currentPlayer;
                 const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
@@ -494,6 +778,182 @@
                 updateStatus();
             }
             
+            // AIが手を打つ
+            async function makeAIMove() {
+                if (!gameActive) return;
+                
+                // 有効な手を取得
+                const validMoves = getValidMoves();
+                if (validMoves.length === 0) {
+                    endGame();
+                    return;
+                }
+                
+                let bestMove;
+                const aiLevelValue = aiLevel.value;
+                
+                if (aiLevelValue === 'random') {
+                    // ランダム戦略：有効な手からランダムに選択
+                    bestMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                } else if (aiLevelValue === 'basic' || !usingOnnxModel) {
+                    // 基本戦略：最も高いポイントを獲得できる手を選択
+                    bestMove = findBestBasicMove(validMoves);
+                } else if (aiLevelValue === 'advanced' && usingOnnxModel) {
+                    // 高度な戦略：ONNXモデルを使用
+                    try {
+                        bestMove = await findBestMoveWithONNX(validMoves);
+                    } catch (err) {
+                        console.error('ONNXモデル推論エラー:', err);
+                        // エラーが発生した場合は基本戦略にフォールバック
+                        bestMove = findBestBasicMove(validMoves);
+                    }
+                } else {
+                    // デフォルトではベーシック戦略
+                    bestMove = findBestBasicMove(validMoves);
+                }
+                
+                // AI思考完了
+                aiThinking = false;
+                status.classList.remove('thinking');
+                
+                // 選択された手を実行
+                placeStone(bestMove.row, bestMove.col);
+            }
+            
+            // 有効な手の取得
+            function getValidMoves() {
+                const moves = [];
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        if (gameBoard[i][j] === null) {
+                            moves.push({ row: i, col: j });
+                        }
+                    }
+                }
+                return moves;
+            }
+            
+            // 基本戦略：最も高いポイントが取れる手を選択
+            function findBestBasicMove(validMoves) {
+                let bestScore = -1;
+                let bestMoves = [];
+                
+                validMoves.forEach(move => {
+                    const { row, col } = move;
+                    // 基本ポイント
+                    const basePoints = cellValues[row][col];
+                    // ボーナスポイント
+                    const adjacentCells = findAdjacentFriendlyStones(row, col);
+                    const bonusPoints = adjacentCells.length;
+                    // 合計ポイント
+                    const totalPoints = basePoints + bonusPoints;
+                    
+                    if (totalPoints > bestScore) {
+                        bestScore = totalPoints;
+                        bestMoves = [move];
+                    } else if (totalPoints === bestScore) {
+                        bestMoves.push(move);
+                    }
+                });
+                
+                // 同点の場合はランダムに選択
+                return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+            }
+            
+            // ONNXモデルを使用して最適な手を選択
+            async function findBestMoveWithONNX(validMoves) {
+                // ONNX Runtimeが利用可能かチェック
+                if (typeof ort === 'undefined') {
+                    console.error('ONNX Runtimeが読み込まれていません');
+                    modelStatus.textContent = 'ONNX Runtimeが読み込まれていないため、基本戦略を使用します';
+                    return findBestBasicMove(validMoves);
+                }
+                
+                if (!onnxSession) {
+                    console.error('ONNXセッションが初期化されていません');
+                    return findBestBasicMove(validMoves);
+                }
+                
+                try {
+                    // 現在の状態を取得
+                    const stateTensor = getStateTensor();
+                    
+                    // 有効なアクションマスクを作成
+                    const validActionsMask = new Float32Array(boardSize * boardSize);
+                    validMoves.forEach(move => {
+                        const actionIndex = move.row * boardSize + move.col;
+                        validActionsMask[actionIndex] = 1.0;
+                    });
+                    
+                    // モデルの入力を準備
+                    const feeds = {};
+                    feeds['state'] = new ort.Tensor('float32', stateTensor, [1, boardSize, boardSize, 4]);
+                    feeds['valid_actions_mask'] = new ort.Tensor('float32', validActionsMask, [1, boardSize * boardSize]);
+                    
+                    // モデルを実行
+                    const results = await onnxSession.run(feeds);
+                    
+                    // Q値を取得（出力名が異なる可能性があるため、最初の出力を使用）
+                    const outputName = Object.keys(results)[0];
+                    const qValues = results[outputName].data;
+                    
+                    // 最高のQ値を持つアクションを選択
+                    let bestActionIndex = 0;
+                    let bestQValue = Number.NEGATIVE_INFINITY;
+                    
+                    for (let i = 0; i < qValues.length; i++) {
+                        if (validActionsMask[i] === 1 && qValues[i] > bestQValue) {
+                            bestQValue = qValues[i];
+                            bestActionIndex = i;
+                        }
+                    }
+                    
+                    // アクションインデックスを行と列に変換
+                    const bestRow = Math.floor(bestActionIndex / boardSize);
+                    const bestCol = bestActionIndex % boardSize;
+                    
+                    console.log('ONNXモデルの選択:', bestRow, bestCol, '(Q値:', bestQValue, ')');
+                    return { row: bestRow, col: bestCol };
+                } catch (err) {
+                    console.error('ONNXモデル実行エラー:', err);
+                    modelStatus.textContent = 'モデル実行中にエラーが発生しました。基本戦略を使用します。';
+                    // エラーの場合は基本戦略にフォールバック
+                    return findBestBasicMove(validMoves);
+                }
+            }
+            
+            // 状態テンソルの取得（モデル入力用）
+            function getStateTensor() {
+                // 状態テンソル: [高さ, 幅, チャンネル]
+                // チャンネル1: 自分の石（1 or 0）
+                // チャンネル2: 相手の石（1 or 0）
+                // チャンネル3: 空きマス（1 or 0）
+                // チャンネル4: セルの価値（1,2,3）を正規化
+                
+                const tensor = new Float32Array(boardSize * boardSize * 4);
+                
+                for (let i = 0; i < boardSize; i++) {
+                    for (let j = 0; j < boardSize; j++) {
+                        const index = (i * boardSize + j) * 4;
+                        
+                        // チャンネル1: 自分の石
+                        tensor[index] = gameBoard[i][j] === currentPlayer ? 1 : 0;
+                        
+                        // チャンネル2: 相手の石
+                        const opponentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+                        tensor[index + 1] = gameBoard[i][j] === opponentPlayer ? 1 : 0;
+                        
+                        // チャンネル3: 空きマス
+                        tensor[index + 2] = gameBoard[i][j] === null ? 1 : 0;
+                        
+                        // チャンネル4: セルの価値（正規化）
+                        tensor[index + 3] = cellValues[i][j] / 3.0;
+                    }
+                }
+                
+                return tensor;
+            }
+            
             // 隣接する味方の石を探す
             function findAdjacentFriendlyStones(row, col) {
                 const directions = [
@@ -532,22 +992,21 @@
                 });
             }
             
-            // ボーナスポイントの表示
-            function displayBonusPoints(cell, points) {
-                // ボーナスポイント表示を削除 - この機能は使用しません
-            }
-            
             // ゲーム終了処理
             function endGame() {
                 gameActive = false;
+                aiThinking = false;
+                status.classList.remove('thinking');
                 
                 // 最終スコアを再度確実に更新
                 updateScore();
                 
                 if (scores.player1 > scores.player2) {
-                    status.textContent = `ゲーム終了！ プレイヤー1の勝利です！`;
+                    const winner = gameMode === 'cvp' ? 'AIの' : player1Name.textContent;
+                    status.textContent = `ゲーム終了！ ${winner}勝利です！`;
                 } else if (scores.player2 > scores.player1) {
-                    status.textContent = `ゲーム終了！ プレイヤー2の勝利です！`;
+                    const winner = gameMode === 'pvc' ? 'AIの' : player2Name.textContent;
+                    status.textContent = `ゲーム終了！ ${winner}勝利です！`;
                 } else {
                     status.textContent = `ゲーム終了！ 引き分けです！`;
                 }
@@ -562,14 +1021,29 @@
             // ステータス更新
             function updateStatus() {
                 if (gameActive) {
-                    status.textContent = `プレイヤー${currentPlayer === 'player1' ? '1' : '2'}の番です`;
+                    if ((gameMode === 'pvc' && currentPlayer === 'player2') || 
+                        (gameMode === 'cvp' && currentPlayer === 'player1')) {
+                        status.textContent = 'AIの番です';
+                    } else {
+                        const playerName = currentPlayer === 'player1' ? player1Name.textContent : player2Name.textContent;
+                        status.textContent = `${playerName}の番です`;
+                    }
                 }
             }
             
             // リセットボタンのイベント
             resetButton.addEventListener('click', initializeBoard);
             
-            // 初期化
+            // ページ読み込み時にONNXモデルを自動的に読み込む
+            window.addEventListener('load', () => {
+                // 少し遅延させてからモデルを読み込む（ページの他のリソースが先に読み込まれるようにするため）
+                setTimeout(() => {
+                    loadOnnxModel();
+                }, 1000);
+            });
+            
+            // 初期化（プレイヤー対プレイヤーモード）
+            updatePlayerNames();
             initializeBoard();
         });
     </script>
